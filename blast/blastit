@@ -1,0 +1,1 @@
+blastn -outfmt 6 -query $1 -subject $2 -ungapped -strand plus -perc_identity 100 -word_size $3
