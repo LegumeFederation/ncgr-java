@@ -1,1 +1,1 @@
-java -Djavax.xml.accessExternalDTD=all -cp classes:/usr/share/java/biojava4-core.jar:/usr/share/java/slf4j-nop.jar org.ncgr.blast.SequenceBlaster $1
+java -Djavax.xml.accessExternalDTD=all -cp classes:lib/biojava4-core.jar:lib/slf4j-nop.jar org.ncgr.blast.SequenceBlaster $1
