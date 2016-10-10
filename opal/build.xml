@@ -37,7 +37,6 @@
 
   <target name="jar" depends="classes">
     <jar destfile="${jar}" basedir="classes"/>
-    <copy file="${jar}" todir="../sandmine/webapp/lib"/>
   </target>
 
   <target name="javadoc" depends="classes">
