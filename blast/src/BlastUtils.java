@@ -2,6 +2,7 @@ package org.ncgr.blast;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
@@ -17,7 +18,6 @@ import javax.xml.bind.Unmarshaller;
 import org.biojava.nbio.core.sequence.DNASequence;
 import org.biojava.nbio.core.sequence.io.FastaReaderHelper;
 import org.biojava.nbio.core.sequence.io.FastaWriterHelper;
-
 
 /**
  * A set of static utility methods for running Blast and returning BlastOutput.
@@ -53,12 +53,35 @@ public class BlastUtils {
             System.err.println("Aborting: blastn returned exit value "+pr.exitValue());
             System.exit(pr.exitValue());
         }
-        File file = new File(filename);
+        return getBlastOutput(filename);
+    }
+
+    /**
+     * Return a BlastOutput from a given XML file
+     *
+     * @param filename the name of the XML file containing blast output
+     * @return a BlastOutput instance
+     */
+    public static BlastOutput getBlastOutput(String filename) throws JAXBException {
         JAXBContext jaxbContext = JAXBContext.newInstance(BlastOutput.class);
         Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-        BlastOutput blastOutput = (BlastOutput) jaxbUnmarshaller.unmarshal(file);
+        BlastOutput blastOutput = (BlastOutput) jaxbUnmarshaller.unmarshal(new File(filename));
         return blastOutput;
     }
+
+    /**
+     * Return a BlastOutput from an XML file given by a URL
+     *
+     * @param url the URL of the XML file
+     * @return a BlastOutput instance
+     */
+    public static BlastOutput getBlastOutput(URL url) throws JAXBException {
+        JAXBContext jaxbContext = JAXBContext.newInstance(BlastOutput.class);
+        Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+        BlastOutput blastOutput = (BlastOutput) jaxbUnmarshaller.unmarshal(url);
+        return blastOutput;
+    }
+    
 
     /**
      * Run blast between all the sequences in the provided file, returning a TreeSet of SequenceHits summarizing the results.

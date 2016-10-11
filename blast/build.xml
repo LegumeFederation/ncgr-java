@@ -21,7 +21,7 @@
     <property name="bj4-survival" value="lib/biojava4-survival-4.1.0.jar"/>
     <property name="bj4-ws" value="lib/biojava4-ws-4.1.0.jar"/>
 
-    <property name="jar" value="lib/ncgr-blast.jar"/>
+    <property name="jar" value="ncgr-blast.jar"/>
   </target>
 
   <target name="about">
