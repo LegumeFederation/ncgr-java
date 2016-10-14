@@ -19,10 +19,9 @@ public class SequenceBlaster {
         try {
             TreeSet<SequenceHits> seqHitsSet = BlastUtils.blastSequenceHits(args[0]);
             for (SequenceHits seqHits : seqHitsSet.descendingSet()) {
-                int hits = seqHits.idSet.size();
-                System.out.println(hits+"x"+seqHits.sequence.length()+" ["+seqHits.score+"]\t"+seqHits.sequence);
-                for (String id : seqHits.idSet) {
-                    System.out.println("\t"+id);
+                System.out.println(seqHits.uniqueHits.size()+"x"+seqHits.sequence.length()+" ["+seqHits.score+"]\t"+seqHits.sequence);
+                for (String hit : seqHits.uniqueHits) {
+                    System.out.println("\t"+hit);
                 }
             }
         } catch (Exception ex) {

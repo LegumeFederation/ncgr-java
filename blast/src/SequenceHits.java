@@ -3,28 +3,30 @@ package org.ncgr.blast;
 import java.util.TreeSet;
 
 /**
- * A simple class that stores a sequence along with a set of the query IDs that contain that particular sequence.
- * equals and compareTo are designed to sort by (number of hits)*length, number of hits, sequence length then sequence alpha.
- * It also contains a score given by BlastUtils.scoreDNASequence so that it need only be computed once.
+ * A container class that stores SequenceHit instances for the same combined sequence.
+ * The method equals() matches against sequence only; compareTo() is designed to sort by score, then number of hits, then sequence alpha.
+ * The score is simply the sum of SequenceHit.score values.
  *
  * @author Sam Hokin
  */
 public class SequenceHits implements Comparable {
 
-    public String sequence = "";
-    public TreeSet<String> idSet;
-    public int baseScore; // the sequence-only score, calculated at construction
-    public int score;     // the full score including the contribution from the number of hits, updated in addId()
+    public String sequence;                   // the sequence associated with the SequenceHit objects
+    public TreeSet<SequenceHit> sequenceHits; // the SequenceHit instances contained within
+    public int score;                         // the full score = sum of SequenceHit.score values.
+    public TreeSet<String> uniqueHits;        // a set of strings representing unique hits "seqID:start-end", either query or hit side
 
     /**
-     * Create a new SequenceHits instance from an input sequence and ID
+     * Create a new SequenceHits instance from a SequenceHit
      */
-    public SequenceHits(String sequence, String id) {
-        this.sequence = sequence;
-        baseScore = (int) Math.round(100.0*BlastUtils.scoreDNASequence(sequence));
-        score = baseScore;
-        idSet = new TreeSet<String>();
-        idSet.add(id);
+    public SequenceHits(SequenceHit sequenceHit) {
+        this.sequence = sequenceHit.sequence;
+        this.score = sequenceHit.score;
+        this.sequenceHits = new TreeSet<SequenceHit>();
+        this.sequenceHits.add(sequenceHit);
+        this.uniqueHits = new TreeSet<String>();
+        this.uniqueHits.add(sequenceHit.getQueryLoc());
+        this.uniqueHits.add(sequenceHit.getHitLoc());
     }
         
     /**
@@ -40,8 +42,8 @@ public class SequenceHits implements Comparable {
      */
     public int compareTo(Object o) {
         SequenceHits that = (SequenceHits) o;
-        int thisHits = this.idSet.size();
-        int thatHits = that.idSet.size();
+        int thisHits = this.sequenceHits.size();
+        int thatHits = that.sequenceHits.size();
         if (this.score!=that.score) {
             return this.score-that.score;
         } else if (thisHits!=thatHits) {
@@ -52,11 +54,13 @@ public class SequenceHits implements Comparable {
     }
 
     /**
-     * Add a sequence ID to the ID set and update the score
+     * Add a SequenceHit to the set and adjust the score
      */
-    public void addId(String id) {
-        idSet.add(id);
-        score = baseScore*idSet.size();
+    public void addSequenceHit(SequenceHit sequenceHit) {
+        sequenceHits.add(sequenceHit);
+        uniqueHits.add(sequenceHit.getQueryLoc());
+        uniqueHits.add(sequenceHit.getHitLoc());
+        score = uniqueHits.size()*sequenceHit.score;
     }
 
 }

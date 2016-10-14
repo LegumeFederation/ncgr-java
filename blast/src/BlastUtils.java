@@ -35,8 +35,8 @@ public class BlastUtils {
      */
     public static BlastOutput runBlastn(String subjectFilename, String queryFilename, Map<String,String> parameters) throws IOException, InterruptedException, JAXBException {
         Runtime rt = Runtime.getRuntime();
-        String filename = "/tmp/blastutils_"+System.currentTimeMillis()+".xml";
-        String command = "blastn -outfmt 5 -out "+filename+" -subject "+subjectFilename+" -query "+queryFilename;
+        String filename = "/tmp/blastutils_"+System.currentTimeMillis();
+        String command = "blastn -outfmt 5 -subject "+subjectFilename+" -query "+queryFilename;
         for (String parameter : parameters.keySet()) {
             if (!parameter.contains("-") &&
                 !parameter.equals("outfmt") &&
@@ -46,7 +46,14 @@ public class BlastUtils {
                 String value = parameters.get(parameter);
                 command += " -"+parameter+" "+value;
             }
+            // indicate the query range that we're searching in the file name
+            if (parameter.equals("query_loc")) {
+                String value = parameters.get(parameter);
+                filename += "_"+value;
+            }
         }
+        filename += ".xml";
+        command += " -out "+filename;
         Process pr = rt.exec(command);
         pr.waitFor();
         if (pr.exitValue()!=0) {
@@ -95,14 +102,14 @@ public class BlastUtils {
         // the smallest word_size for the blast runs
         String WORD_SIZE = "8";
 
-        // the blastn parameters
+        // the blastn parameters without the dash
         Map<String,String> parameters = new HashMap<String,String>();
         parameters.put("strand", "plus");
         parameters.put("ungapped", "");
         parameters.put("perc_identity", "100");
         parameters.put("word_size", WORD_SIZE);
     
-        // we'll add the found hits to this map
+        // we'll add the found hits to this map of SequenceHits
         TreeMap<String,SequenceHits> seqHitsMap = new TreeMap<String,SequenceHits>();
 
         FastaReaderHelper frh = new FastaReaderHelper();
@@ -121,24 +128,26 @@ public class BlastUtils {
         // loop through each sequence as query against the remaining as subject
         for (DNASequence querySequence : sequenceMap.values()) {
 
-            String queryId = querySequence.getOriginalHeader();
+            String queryID = querySequence.getOriginalHeader();
             File queryFile = null;
             File subjectFile = null;
 
             // write out the query fasta
             queryFile = File.createTempFile("query", ".fasta");
             fwh.writeSequence(queryFile, querySequence);
+            String queryFilePath = queryFile.getAbsolutePath();
             
             // create the subject multi-fasta = all sequences but the query sequence
             LinkedHashMap<String,DNASequence> subjectMap = new LinkedHashMap<String,DNASequence>(sequenceMap);
-            subjectMap.remove(queryId);
+            subjectMap.remove(queryID);
             
             // write out the subject file
             subjectFile = File.createTempFile("subject", ".fasta");
             fwh.writeNucleotideSequence(subjectFile, subjectMap.values());
+            String subjectFilePath = subjectFile.getAbsolutePath();
             
-            // now run BLAST with parameters including WORD_SIZE
-            BlastOutput blastOutput = runBlastn(subjectFile.getAbsolutePath(), queryFile.getAbsolutePath(), parameters);
+            // now run BLAST with given parameters
+            BlastOutput blastOutput = runBlastn(subjectFilePath, queryFilePath, parameters);
             BlastOutputIterations iterations = blastOutput.getBlastOutputIterations();
             if (iterations!=null) {
                 List<Iteration> iterationList = iterations.getIteration();
@@ -147,25 +156,18 @@ public class BlastUtils {
                         if (iteration.getIterationMessage()==null) {
                             List<Hit> hitList = iteration.getIterationHits().getHit();
                             for (Hit hit : hitList) {
-                                String hitId = hit.getHitDef();
+                                String hitID = hit.getHitDef();
                                 HitHsps hsps = hit.getHitHsps();
                                 if (hsps!=null) {
                                     List<Hsp> hspList = hsps.getHsp();
                                     if (hspList!=null) {
                                         for (Hsp hsp : hspList) {
-                                            String hSeq = hsp.getHspHseq();
-                                            String hFrom = hsp.getHspHitFrom();
-                                            String hTo = hsp.getHspHitTo();
-                                            String qSeq = hsp.getHspQseq();
-                                            String qFrom = hsp.getHspQueryFrom();
-                                            String qTo = hsp.getHspQueryTo();
+                                            String qSeq = hsp.getHspQseq(); // qSeq = motif
                                             if (seqHitsMap.containsKey(qSeq)) {
                                                 SequenceHits seqHits = seqHitsMap.get(qSeq);
-                                                seqHits.addId(queryId);
-                                                seqHits.addId(hitId);
+                                                seqHits.addSequenceHit(new SequenceHit(queryID, hitID, hsp));
                                             } else {
-                                                SequenceHits seqHits = new SequenceHits(qSeq, queryId);
-                                                seqHits.addId(hitId);
+                                                SequenceHits seqHits = new SequenceHits(new SequenceHit(queryID, hitID, hsp));
                                                 seqHitsMap.put(qSeq, seqHits);
                                             }
                                         }
@@ -176,10 +178,9 @@ public class BlastUtils {
                     }
                 }
             }
-            
         }
 
-        // return output TreeSet, which is sorted by most hits first
+        // return output TreeSet, which is sorted by score
         return new TreeSet<SequenceHits>(seqHitsMap.values());
 
     }
@@ -189,13 +190,13 @@ public class BlastUtils {
      * The probabilities for each are set at the top. Longer sequences naturally get much larger scores, so this should be used to 
      * compare sequences of the same length.
      *
-     * @param  a string sequence of DNA letters
+     * @param  sequence a string sequence of DNA letters
      * @return an integer score
      */
     public static double scoreDNASequence(String sequence) {
 
-        char[] letters = { 'A',  'T',  'C',  'G'  };
-        double[] probs = { 0.35, 0.35, 0.15, 0.15 };
+        char[] letters = { 'A',  'T',  'C',  'G',  'W',  'K',  'R',  'M',  'Y',  'S',  'N'  };
+        double[] probs = { 0.35, 0.35, 0.15, 0.15, 1.00, 0.50, 0.50, 0.50, 0.50, 0.30, 1.00 };
         
         char[] chars = sequence.toCharArray();
         double totalProb = 1.00;
@@ -213,6 +214,31 @@ public class BlastUtils {
     }
 
     /**
+     * Return a combined sequence from two input sequences, where mismatches are represented by "N". Assumes both are of same length.
+     *
+     * @param seq1 a string sequence of DNA letters
+     * @param seq2 a string sequence of DNA letters
+     * @return combined a string sequence representing seq1 and seq2 with mismatches represented by N 
+     */
+    public static String combineSequences(String seq1, String seq2) {
+        if (seq1.length()!=seq2.length()) {
+            return null;
+        }
+        char[] seq1Chars = seq1.toCharArray();
+        char[] seq2Chars = seq2.toCharArray();
+        String combined = "";
+        for (int i=0; i<seq1Chars.length; i++) {
+            if (seq1Chars[i]==seq2Chars[i]) {
+                combined += seq1Chars[i];
+            } else {
+                combined += 'N';
+            }
+        }
+        return combined;
+    }
+    
+
+    /**
      * Read a Blast-generated XML file (-outfmt 5) and spit out the contents.
      *
      * @param filepath the full path of the blast XML file
@@ -228,7 +254,7 @@ public class BlastUtils {
             System.out.println("db="+blastOutput.getBlastOutputDb());
             System.out.println("program="+blastOutput.getBlastOutputProgram());
             System.out.println("queryDef="+blastOutput.getBlastOutputQueryDef());
-            System.out.println("queryId="+blastOutput.getBlastOutputQueryID());
+            System.out.println("queryID="+blastOutput.getBlastOutputQueryID());
             System.out.println("queryLen="+blastOutput.getBlastOutputQueryLen());
             System.out.println("querySeq="+blastOutput.getBlastOutputQuerySeq());
             System.out.println("outputReference="+blastOutput.getBlastOutputReference());
@@ -289,7 +315,7 @@ public class BlastUtils {
                         System.out.println("num="+iteration.getIterationIterNum());
                         System.out.println("message="+iteration.getIterationMessage());
                         System.out.println("queryDef="+iteration.getIterationQueryDef());
-                        System.out.println("queryId="+iteration.getIterationQueryID());
+                        System.out.println("queryID="+iteration.getIterationQueryID());
                         System.out.println("queryLen="+iteration.getIterationQueryLen());
                         
                         IterationStat stat = iteration.getIterationStat();
