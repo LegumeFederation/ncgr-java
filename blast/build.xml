@@ -4,22 +4,22 @@
   <target name="init">
     <tstamp/>
 
-    <property name="bj4-aa-prop" value="lib/biojava4-aa-prop-4.1.0.jar"/>
-    <property name="bj4-alignment" value="lib/biojava4-alignment-4.1.0.jar"/>
-    <property name="bj4-core" value="lib/biojava4-core-4.1.0.jar"/>
-    <property name="bj4-forester" value="lib/biojava4-forester-4.1.0.jar"/>
-    <property name="bj4-genome" value="lib/biojava4-genome-4.1.0.jar"/>
-    <property name="bj4-jcolorbrewer" value="lib/biojava4-jcolorbrewer-4.1.0.jar"/>
-    <property name="bj4-modfinder" value="lib/biojava4-modfinder-4.1.0.jar"/>
-    <property name="bj4-ontology" value="lib/biojava4-ontology-4.1.0.jar"/>
-    <property name="bj4-phylo" value="lib/biojava4-phylo-4.1.0.jar"/>
-    <property name="bj4-protein-comparison-tool" value="lib/biojava4-protein-comparison-tool-4.1.0.jar"/>
-    <property name="bj4-protein-disorder" value="lib/biojava4-protein-disorder-4.1.0.jar"/>
-    <property name="bj4-sequencing" value="lib/biojava4-sequencing-4.1.0.jar"/>
-    <property name="bj4-structure-gui" value="lib/biojava4-structure-gui-4.1.0.jar"/>
-    <property name="bj4-structure" value="lib/biojava4-structure-4.1.0.jar"/>
-    <property name="bj4-survival" value="lib/biojava4-survival-4.1.0.jar"/>
-    <property name="bj4-ws" value="lib/biojava4-ws-4.1.0.jar"/>
+    <property name="bj4-aa-prop" value="lib/biojava4-aa-prop.jar"/>
+    <property name="bj4-alignment" value="lib/biojava4-alignment.jar"/>
+    <property name="bj4-core" value="lib/biojava4-core.jar"/>
+    <property name="bj4-forester" value="lib/biojava4-forester.jar"/>
+    <property name="bj4-genome" value="lib/biojava4-genome.jar"/>
+    <property name="bj4-jcolorbrewer" value="lib/biojava4-jcolorbrewer.jar"/>
+    <property name="bj4-modfinder" value="lib/biojava4-modfinder.jar"/>
+    <property name="bj4-ontology" value="lib/biojava4-ontology.jar"/>
+    <property name="bj4-phylo" value="lib/biojava4-phylo.jar"/>
+    <property name="bj4-protein-comparison-tool" value="lib/biojava4-protein-comparison-tool.jar"/>
+    <property name="bj4-protein-disorder" value="lib/biojava4-protein-disorder.jar"/>
+    <property name="bj4-sequencing" value="lib/biojava4-sequencing.jar"/>
+    <property name="bj4-structure-gui" value="lib/biojava4-structure-gui.jar"/>
+    <property name="bj4-structure" value="lib/biojava4-structure.jar"/>
+    <property name="bj4-survival" value="lib/biojava4-survival.jar"/>
+    <property name="bj4-ws" value="lib/biojava4-ws.jar"/>
 
     <property name="jar" value="ncgr-blast.jar"/>
   </target>

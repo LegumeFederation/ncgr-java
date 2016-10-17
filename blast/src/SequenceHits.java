@@ -1,5 +1,6 @@
 package org.ncgr.blast;
 
+import java.util.TreeMap;
 import java.util.TreeSet;
 
 /**
@@ -14,7 +15,7 @@ public class SequenceHits implements Comparable {
     public String sequence;                   // the sequence associated with the SequenceHit objects
     public TreeSet<SequenceHit> sequenceHits; // the SequenceHit instances contained within
     public int score;                         // the full score = sum of SequenceHit.score values.
-    public TreeSet<String> uniqueHits;        // a set of strings representing unique hits "seqID:start-end", either query or hit side
+    public TreeSet<String> uniqueHits;        // a set of strings representing unique hits of the form seqID:start-end
 
     /**
      * Create a new SequenceHits instance from a SequenceHit
@@ -54,13 +55,15 @@ public class SequenceHits implements Comparable {
     }
 
     /**
-     * Add a SequenceHit to the set and adjust the score
+     * Add a SequenceHit to the set and adjust the score, and add to uniqueHits set
      */
     public void addSequenceHit(SequenceHit sequenceHit) {
         sequenceHits.add(sequenceHit);
+        int oldSize = uniqueHits.size();
         uniqueHits.add(sequenceHit.getQueryLoc());
         uniqueHits.add(sequenceHit.getHitLoc());
-        score = uniqueHits.size()*sequenceHit.score;
+        int newSize = uniqueHits.size();
+        if (newSize!=oldSize) score += (newSize-oldSize)*sequenceHit.score;
     }
 
 }
