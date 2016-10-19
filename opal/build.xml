@@ -31,7 +31,10 @@
     <javac srcdir="src"
 	   classpath="classes:${axis}:${jaxrpc}:${commons-cli}:${commons-logging}:${commons-discovery}:${wsdl4j}:${activation}:${mailapi}:${cog-axis}:${cog-jglobus}:${commons-lang3}"
            includeantruntime="false"
+	   deprecation="on"
+	   listfiles="yes"
 	   destdir="classes">
+      <compilerarg value="-Xlint:unchecked" />
     </javac>
   </target>
 

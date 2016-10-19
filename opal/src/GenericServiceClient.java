@@ -304,7 +304,7 @@ public class GenericServiceClient {
 	    }
 
 	    // initialize list of files
-	    Vector inputFileVector = new Vector();
+	    Vector<InputFileType> inputFileVector = new Vector<InputFileType>();
 
 	    // get list of input files
 	    String[] inputFiles = line.getOptionValues("f");

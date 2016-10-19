@@ -4,40 +4,35 @@
   <target name="init">
     <tstamp/>
 
-    <property name="bj4-aa-prop" value="lib/biojava4-aa-prop.jar"/>
-    <property name="bj4-alignment" value="lib/biojava4-alignment.jar"/>
-    <property name="bj4-core" value="lib/biojava4-core.jar"/>
-    <property name="bj4-forester" value="lib/biojava4-forester.jar"/>
-    <property name="bj4-genome" value="lib/biojava4-genome.jar"/>
-    <property name="bj4-jcolorbrewer" value="lib/biojava4-jcolorbrewer.jar"/>
-    <property name="bj4-modfinder" value="lib/biojava4-modfinder.jar"/>
-    <property name="bj4-ontology" value="lib/biojava4-ontology.jar"/>
-    <property name="bj4-phylo" value="lib/biojava4-phylo.jar"/>
-    <property name="bj4-protein-comparison-tool" value="lib/biojava4-protein-comparison-tool.jar"/>
-    <property name="bj4-protein-disorder" value="lib/biojava4-protein-disorder.jar"/>
-    <property name="bj4-sequencing" value="lib/biojava4-sequencing.jar"/>
-    <property name="bj4-structure-gui" value="lib/biojava4-structure-gui.jar"/>
-    <property name="bj4-structure" value="lib/biojava4-structure.jar"/>
-    <property name="bj4-survival" value="lib/biojava4-survival.jar"/>
-    <property name="bj4-ws" value="lib/biojava4-ws.jar"/>
+    <property name="bj4-aa-prop" value="lib/biojava-aa-prop-4.2.0.jar"/>
+    <property name="bj4-alignment" value="lib/biojava-alignment-4.2.0.jar"/>
+    <property name="bj4-core" value="lib/biojava-core-4.2.0.jar"/>
+    <property name="bj4-forester" value="lib/biojava-forester-4.2.0.jar"/>
+    <property name="bj4-genome" value="lib/biojava-genome-4.2.0.jar"/>
+    <property name="bj4-jcolorbrewer" value="lib/biojava-jcolorbrewer-4.2.0.jar"/>
+    <property name="bj4-modfinder" value="lib/biojava-modfinder-4.2.0.jar"/>
+    <property name="bj4-ontology" value="lib/biojava-ontology-4.2.0.jar"/>
+    <property name="bj4-phylo" value="lib/biojava-phylo-4.2.0.jar"/>
+    <property name="bj4-protein-comparison-tool" value="lib/biojava-protein-comparison-tool-4.2.0.jar"/>
+    <property name="bj4-protein-disorder" value="lib/biojava-protein-disorder-4.2.0.jar"/>
+    <property name="bj4-sequencing" value="lib/biojava-sequencing-4.2.0.jar"/>
+    <property name="bj4-structure-gui" value="lib/biojava-structure-gui-4.2.0.jar"/>
+    <property name="bj4-structure" value="lib/biojava-structure-4.2.0.jar"/>
+    <property name="bj4-survival" value="lib/biojava-survival-4.2.0.jar"/>
+    <property name="bj4-ws" value="lib/biojava-ws-4.2.0.jar"/>
 
     <property name="jar" value="ncgr-blast.jar"/>
   </target>
 
   <target name="about">
-    <echo> 
-      This build.xml file builds the NCGR bj-related utilities.
+    <echo>
+      This build.xml file builds the NCGR blast-related utilities.
     </echo>
   </target>
   
-  <!--
-  :${bj3-aa-prop}:${bj3-alignment}:${bj3-core}:${bj3-forester}:${bj3-genome}:${bj3-jcolorbrewer}:${bj3-modfinder}:${bj3-ontology}
-  :${bj3-phylo}:${bj3-protein-comparison-tool}:${bj3-protein-disorder}:${bj3-sequencing}:${bj3-structure-gui}:${bj3-structure}:${bj3-survival}:${bj3-ws}
-  -->
-  
   <target name="classes" depends="init">
     <javac srcdir="src"
-	   classpath="classes:${bj4-core}"
+	   classpath="classes:${bj4-aa-prop}:${bj4-alignment}:${bj4-core}:${bj4-forester}:${bj4-genome}:${bj4-jcolorbrewer}:${bj4-modfinder}:${bj4-ontology}:${bj4-phylo}:${bj4-protein-comparison-tool}:${bj4-protein-disorder}:${bj4-sequencing}:${bj4-structure-gui}:${bj4-structure}:${bj4-survival}:${bj4-ws}"
            deprecation="true"
            includeantruntime="false"
 	   destdir="classes">
