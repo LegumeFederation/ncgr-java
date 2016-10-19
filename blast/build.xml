@@ -46,7 +46,7 @@
 
   <target name="javadoc" depends="classes">
     <javadoc destdir="javadoc"
-	     classpath="classes:${bj4-core}">
+	     classpath="classes:${bj4-aa-prop}:${bj4-alignment}:${bj4-core}:${bj4-forester}:${bj4-genome}:${bj4-jcolorbrewer}:${bj4-modfinder}:${bj4-ontology}:${bj4-phylo}:${bj4-protein-comparison-tool}:${bj4-protein-disorder}:${bj4-sequencing}:${bj4-structure-gui}:${bj4-structure}:${bj4-survival}:${bj4-ws}">
       <fileset dir="src" />
     </javadoc>
   </target>
