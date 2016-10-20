@@ -25,7 +25,7 @@ public class SequenceHit implements Comparable {
     }
 
     /**
-     * Two are equal if they have the exact same sequence, and same queryID, hitID in either order
+     * Two are equal if they have the same sequence, and same queryID and hitID in either order
      */
     public boolean equals(Object o) {
         SequenceHit that = (SequenceHit) o;

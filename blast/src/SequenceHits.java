@@ -4,17 +4,17 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 
 /**
- * A container class that stores SequenceHit instances for the same combined sequence.
+ * A container class that stores SequenceHit instances for the same combined sequence (motif).
  * The method equals() matches against sequence only; compareTo() is designed to sort by score, then number of hits, then sequence alpha.
- * The score is simply the sum of SequenceHit.score values.
+ * The score is the sum of SequenceHit.score values for DISTINCT query/subject IDs.
  *
  * @author Sam Hokin
  */
 public class SequenceHits implements Comparable {
 
     public String sequence;                   // the sequence associated with the SequenceHit objects
-    public TreeSet<SequenceHit> sequenceHits; // the SequenceHit instances contained within
     public int score;                         // the full score = sum of SequenceHit.score values.
+    public TreeSet<SequenceHit> sequenceHits; // the SequenceHit instances contained within
     public TreeSet<String> uniqueHits;        // a set of strings representing unique hits of the form seqID:start-end
 
     /**
@@ -55,15 +55,44 @@ public class SequenceHits implements Comparable {
     }
 
     /**
-     * Add a SequenceHit to the set and adjust the score, and add to uniqueHits set
+     * Adjust the score and add a SequenceHit to the set and add to uniqueHits set. The score is only incremented for new IDs.
      */
     public void addSequenceHit(SequenceHit sequenceHit) {
+        if (!containsID(sequenceHit.queryID)) score += sequenceHit.score;
+        if (!containsID(sequenceHit.hitID)) score += sequenceHit.score;
         sequenceHits.add(sequenceHit);
-        int oldSize = uniqueHits.size();
         uniqueHits.add(sequenceHit.getQueryLoc());
         uniqueHits.add(sequenceHit.getHitLoc());
-        int newSize = uniqueHits.size();
-        if (newSize!=oldSize) score += (newSize-oldSize)*sequenceHit.score;
+    }
+
+    /**
+     * Return true if this instance contains a SequenceHit with the given queryID
+     */
+    public boolean containsQueryID(String queryID) {
+        for (SequenceHit seqHit : sequenceHits) {
+            if (seqHit.queryID.equals(queryID)) return true;
+        }
+        return false;
+    }
+
+    /**
+     * Return true if this instance contains a SequenceHit with the given hitID
+     */
+    public boolean containsHitID(String hitID) {
+        for (SequenceHit seqHit : sequenceHits) {
+            if (seqHit.hitID.equals(hitID)) return true;
+        }
+        return false;
+    }
+
+    /**
+     * Return true if this instance contains a SequenceHit with either queryID or hitID matching the given ID
+     */
+    public boolean containsID(String id) {
+        for (SequenceHit seqHit : sequenceHits) {
+            if (seqHit.queryID.equals(id) || seqHit.hitID.equals(id)) return true;
+        }
+        return false;
     }
 
 }
