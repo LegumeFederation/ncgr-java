@@ -71,8 +71,7 @@ public class SequenceBlaster {
             DNASequence topMotif = null;
             List<DNASequence> logoMotifs = new ArrayList<DNASequence>();
             for (SequenceHits seqHits : seqHitsSet.descendingSet()) {
-                // motifs without G or C get discarded
-                if (seqHits.score>0) {
+                if (seqHits.score>0 && (seqHits.sequence.contains("C") || seqHits.sequence.contains("G"))) {
                     
                     count++;
                     
@@ -126,7 +125,6 @@ public class SequenceBlaster {
                     // System.out.println(seqHits.sequence+"\t["+seqHits.score+"]["+seqHits.uniqueHits.size()+"]");
                     
                 }
-                
             }
 
             long pairwiseEnd = System.currentTimeMillis();
