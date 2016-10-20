@@ -147,14 +147,13 @@ public class BlastUtils {
                                     List<Hsp> hspList = hsps.getHsp();
                                     if (hspList!=null) {
                                         for (Hsp hsp : hspList) {
-                                            String qSeq = hsp.getHspQseq(); // qSeq = motif
                                             SequenceHit seqHit = new SequenceHit(queryID, hitID, hsp);
-                                            if (seqHitsMap.containsKey(qSeq)) {
-                                                SequenceHits seqHits = seqHitsMap.get(qSeq);
+                                            if (seqHitsMap.containsKey(seqHit.sequence)) {
+                                                SequenceHits seqHits = seqHitsMap.get(seqHit.sequence);
                                                 seqHits.addSequenceHit(seqHit);
                                             } else {
                                                 SequenceHits seqHits = new SequenceHits(seqHit);
-                                                seqHitsMap.put(qSeq, seqHits);
+                                                seqHitsMap.put(seqHit.sequence, seqHits);
                                             }
                                         }
                                     }
