@@ -3,6 +3,9 @@ package org.ncgr.blast;
 import java.io.File;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Set;
 import java.util.TreeSet;
 import java.text.DecimalFormat;
 
@@ -30,10 +33,19 @@ import org.biojava.nbio.core.util.ConcurrencyTools;
  */
 public class SequenceBlaster {
 
-    // defaults
-    public static double MAX_DISTANCE = 0.5; // maximum distance of a motif from top-scoring motif to be used in sequence logo
-    public static int GOP = 10;              // gap open penalty for alignments
-    public static int GEP = 1;               // gap extension penalty for alignments
+    // BLAST parameters
+    static String STRAND = "plus";
+    static String WORD_SIZE = "8";
+    static String PERC_IDENTITY = "80";
+    static boolean UNGAPPED = true;
+    
+    // toss motifs greater than this length
+    static int MAX_MOTIF_LENGTH = 27;
+    
+    // BioJava alignment parameters
+    static double MAX_DISTANCE = 0.2; // maximum distance of a motif from top-scoring motif to be used in sequence logo
+    static int GOP = 10;              // gap open penalty for pairwise and multi-sequence alignments
+    static int GEP = 1;               // gap extension penalty for pairwise and multi-sequence alignments
 
     static DecimalFormat dec = new DecimalFormat("0.0000");
     static DecimalFormat rnd = new DecimalFormat("+00;-00");
@@ -50,6 +62,7 @@ public class SequenceBlaster {
         int gop = GOP;
         int gep = GEP;
 
+        String fastaFilename = args[0];
         if (args.length>1) maxDistance = Double.parseDouble(args[1]);
         if (args.length>3) gop = Integer.parseInt(args[3]);
         if (args.length>4) gep = Integer.parseInt(args[4]);
@@ -58,10 +71,17 @@ public class SequenceBlaster {
         SubstitutionMatrix<NucleotideCompound> subMatrix = SubstitutionMatrixHelper.getNuc4_4();
 
         try {
+
+            // the blastn parameters without the dash
+            Map<String,String> blastParameters = new HashMap<String,String>();
+            blastParameters.put("strand", STRAND);
+            blastParameters.put("word_size", WORD_SIZE);
+            blastParameters.put("perc_identity", PERC_IDENTITY);
+            if (UNGAPPED) blastParameters.put("ungapped", "");
             
             // BLAST the FASTA!
             long blastStart = System.currentTimeMillis();
-            TreeSet<SequenceHits> seqHitsSet = BlastUtils.blastSequenceHits(args[0]);
+            TreeSet<SequenceHits> seqHitsSet = BlastUtils.blastSequenceHits(fastaFilename, blastParameters);
             long blastEnd = System.currentTimeMillis();
 
             // collect top numKept singular motifs for further analysis
@@ -71,10 +91,12 @@ public class SequenceBlaster {
             DNASequence topMotif = null;
             List<DNASequence> logoMotifs = new ArrayList<DNASequence>();
             for (SequenceHits seqHits : seqHitsSet.descendingSet()) {
-                if (seqHits.score>0 && (seqHits.sequence.contains("C") || seqHits.sequence.contains("G"))) {
-                    
+                // filter on sequence attributes
+                boolean keep = true;
+                keep = keep && seqHits.sequence.length()<=MAX_MOTIF_LENGTH;
+                keep = keep && (seqHits.sequence.contains("C") || seqHits.sequence.contains("G"));
+                if (keep) {
                     count++;
-                    
                     if (first) {
                         first = false;
                         // save the top motif for pairwise alignments
@@ -100,19 +122,16 @@ public class SequenceBlaster {
                             System.out.println();
                         }
                     }
-                    
                     // // WEIGHTED FASTA-PER-MOTIF VERSION
                     // double weight = (double)seqHits.score/(double)maxScore;
                     // System.out.println(">WEIGHTS "+weight);
                     // System.out.println(">"+seqHits.uniqueHits.size()+"x"+seqHits.sequence.length()+"["+seqHits.score+"]"+seqHits.sequence);
                     // System.out.println(seqHits.sequence);
-                    
                     // // FASTA-PER-HIT VERSION
                     // for (String hit : seqHits.uniqueHits) {
                     //     System.out.println(">["+seqHits.score+"]["+seqHits.sequence.length()+"]"+hit.replace(' ','-'));
                     //     System.out.println(seqHits.sequence);
                     // }
-                    
                     // // TEXT VERSION
                     // System.out.println(seqHits.sequence+"["+seqHits.score+"]");
                     // for (String hit : seqHits.uniqueHits) {
@@ -120,16 +139,14 @@ public class SequenceBlaster {
                     //     String id = pieces[0];
                     //     System.out.println("\t"+hit);
                     // }
-                    
                     // MINIMAL TEXT VERSION
                     // System.out.println(seqHits.sequence+"\t["+seqHits.score+"]["+seqHits.uniqueHits.size()+"]");
-                    
                 }
             }
 
             long pairwiseEnd = System.currentTimeMillis();
             System.out.println();
-            System.out.println("------- "+logoMotifs.size()+" motifs in sequence logo -----");
+            System.out.println("------- "+logoMotifs.size()+" motifs gathered for sequence logo -----");
 
             long multiStart = 0;
             long multiEnd = 0;

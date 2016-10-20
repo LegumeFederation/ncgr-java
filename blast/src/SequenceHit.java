@@ -17,7 +17,7 @@ public class SequenceHit implements Comparable {
      * Create a new SequenceHit from query and hit IDs and the HSP
      */
     public SequenceHit(String queryID, String hitID, Hsp hsp) {
-        this.sequence = BlastUtils.combineSequences(hsp.getHspQseq(), hsp.getHspHseq());
+        this.sequence = BlastUtils.combineDNASequences(hsp.getHspQseq(), hsp.getHspHseq(), false);
         this.queryID = queryID;
         this.hitID = hitID;
         this.hsp = hsp;

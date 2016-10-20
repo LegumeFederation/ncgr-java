@@ -38,19 +38,16 @@ public class BlastUtils {
         String filename = "/tmp/blastutils_"+System.currentTimeMillis();
         String command = "blastn -outfmt 5 -subject "+subjectFilename+" -query "+queryFilename;
         for (String parameter : parameters.keySet()) {
-            if (!parameter.contains("-") &&
-                !parameter.equals("outfmt") &&
+            parameter = parameter.replace("-",""); // remove dash as a courtesy
+            String value = parameters.get(parameter);
+            if (!parameter.equals("outfmt") &&
                 !parameter.equals("out") &&
                 !parameter.equals("subject") &&
                 !parameter.equals("query")) {
-                String value = parameters.get(parameter);
                 command += " -"+parameter+" "+value;
             }
             // indicate the query range that we're searching in the file name
-            if (parameter.equals("query_loc")) {
-                String value = parameters.get(parameter);
-                filename += "_"+value;
-            }
+            if (parameter.equals("query_loc")) filename += "_"+value;
         }
         filename += ".xml";
         command += " -out "+filename;
@@ -64,7 +61,7 @@ public class BlastUtils {
     }
 
     /**
-     * Return a BlastOutput from a given XML file
+     * Return a BlastOutput from a given XML filename
      *
      * @param filename the name of the XML file containing blast output
      * @return a BlastOutput instance
@@ -95,19 +92,10 @@ public class BlastUtils {
      * Uses temp storage to create the many FASTA files used in the BLAST command line.
      *
      * @param  multiFastaFilename the name of a multi-fasta file containing all the sequences to search for common motifs
+     * @param  parameters a map of parameter names (without the dash) and values
      * @return a TreeSet containing resulting SequenceHits sorted by the SequenceHits comparator
      */
-    public static TreeSet<SequenceHits> blastSequenceHits(String multiFastaFilename) throws Exception {
-
-        // the smallest word_size for the blast runs
-        String WORD_SIZE = "8";
-
-        // the blastn parameters without the dash
-        Map<String,String> parameters = new HashMap<String,String>();
-        parameters.put("strand", "plus");
-        parameters.put("ungapped", "");
-        parameters.put("perc_identity", "100");
-        parameters.put("word_size", WORD_SIZE);
+    public static TreeSet<SequenceHits> blastSequenceHits(String multiFastaFilename, Map<String,String> parameters) throws Exception {
     
         // we'll add the found hits to this map of SequenceHits
         TreeMap<String,SequenceHits> seqHitsMap = new TreeMap<String,SequenceHits>();
@@ -128,12 +116,9 @@ public class BlastUtils {
         // loop through each sequence as query against the remaining as subject
         for (DNASequence querySequence : sequenceMap.values()) {
 
-            String queryID = querySequence.getOriginalHeader();
-            File queryFile = null;
-            File subjectFile = null;
-
             // write out the query fasta
-            queryFile = File.createTempFile("query", ".fasta");
+            String queryID = querySequence.getOriginalHeader();
+            File queryFile = File.createTempFile("query", ".fasta");
             fwh.writeSequence(queryFile, querySequence);
             String queryFilePath = queryFile.getAbsolutePath();
             
@@ -142,7 +127,7 @@ public class BlastUtils {
             subjectMap.remove(queryID);
             
             // write out the subject file
-            subjectFile = File.createTempFile("subject", ".fasta");
+            File subjectFile = File.createTempFile("subject", ".fasta");
             fwh.writeNucleotideSequence(subjectFile, subjectMap.values());
             String subjectFilePath = subjectFile.getAbsolutePath();
             
@@ -163,11 +148,12 @@ public class BlastUtils {
                                     if (hspList!=null) {
                                         for (Hsp hsp : hspList) {
                                             String qSeq = hsp.getHspQseq(); // qSeq = motif
+                                            SequenceHit seqHit = new SequenceHit(queryID, hitID, hsp);
                                             if (seqHitsMap.containsKey(qSeq)) {
                                                 SequenceHits seqHits = seqHitsMap.get(qSeq);
-                                                seqHits.addSequenceHit(new SequenceHit(queryID, hitID, hsp));
+                                                seqHits.addSequenceHit(seqHit);
                                             } else {
-                                                SequenceHits seqHits = new SequenceHits(new SequenceHit(queryID, hitID, hsp));
+                                                SequenceHits seqHits = new SequenceHits(seqHit);
                                                 seqHitsMap.put(qSeq, seqHits);
                                             }
                                         }
@@ -210,13 +196,15 @@ public class BlastUtils {
     }
 
     /**
-     * Return a combined sequence from two input sequences, where mismatches are represented by "N". Assumes both are of same length.
-     *
-     * @param seq1 a string sequence of DNA letters
-     * @param seq2 a string sequence of DNA letters
-     * @return combined a string sequence representing seq1 and seq2 with mismatches represented by N 
+     * Return a combined sequence from two input DNA sequences, where mismatches are represented by their standard IUB/IUPAC codes if useIUB=true,
+     * or simply 'N' if useIUB=false. Returns null if sequences are not same length.
+     * 
+     * @param seq1 string sequence of DNA letters
+     * @param seq2 string sequence of DNA letters
+     * @param useIUB boolean indicating whether to use IUB/IUPAC codes for mismatches; only N is used if false
+     * @return combined a string sequence representing seq1 and seq2 with mismatches represented by N; null if not same length
      */
-    public static String combineSequences(String seq1, String seq2) {
+    public static String combineDNASequences(String seq1, String seq2, boolean useIUB) {
         if (seq1.length()!=seq2.length()) {
             return null;
         }
@@ -224,15 +212,34 @@ public class BlastUtils {
         char[] seq2Chars = seq2.toCharArray();
         String combined = "";
         for (int i=0; i<seq1Chars.length; i++) {
-            if (seq1Chars[i]==seq2Chars[i]) {
-                combined += seq1Chars[i];
+            if ( seq1Chars[i]==seq2Chars[i] ) {
+                combined += seq1Chars[i];  // identical
+            } else if ( useIUB && (seq1Chars[i]=='A'||seq1Chars[i]=='G') && (seq2Chars[i]=='A'||seq2Chars[i]=='G') ) {
+                combined += 'R';           // puRine
+            } else if ( useIUB && (seq1Chars[i]=='C'||seq1Chars[i]=='T') && (seq2Chars[i]=='C'||seq2Chars[i]=='T') ) {
+                combined += 'Y';           // pYrimidines
+            } else if ( useIUB && (seq1Chars[i]=='G'||seq1Chars[i]=='T') && (seq2Chars[i]=='G'||seq2Chars[i]=='T') ) {
+                combined += 'K';           // Ketones
+            } else if ( useIUB && (seq1Chars[i]=='A'||seq1Chars[i]=='C') && (seq2Chars[i]=='A'||seq2Chars[i]=='C') ) {
+                combined += 'M';           // aMino groups
+            } else if ( useIUB && (seq1Chars[i]=='C'||seq1Chars[i]=='G') && (seq2Chars[i]=='C'||seq2Chars[i]=='G') ) {
+                combined += 'S';           // Strong interaction
+            } else if ( useIUB && (seq1Chars[i]=='A'||seq1Chars[i]=='T') && (seq2Chars[i]=='A'||seq2Chars[i]=='T') ) {
+                combined += 'W';           // Weak interaction
+            } else if ( useIUB && (seq1Chars[i]!='A') && (seq2Chars[i]!='A') ) {
+                combined += 'B';
+            } else if ( useIUB && (seq1Chars[i]!='C') && (seq2Chars[i]!='C') ) {
+                combined += 'D';
+            } else if ( useIUB && (seq1Chars[i]!='G') && (seq2Chars[i]!='G') ) {
+                combined += 'H';
+            } else if ( useIUB && (seq1Chars[i]!='T') && (seq2Chars[i]!='T') ) {
+                combined += 'V';
             } else {
                 combined += 'N';
             }
         }
         return combined;
     }
-    
 
     /**
      * Read a Blast-generated XML file (-outfmt 5) and spit out the contents.
