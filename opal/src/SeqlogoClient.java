@@ -106,8 +106,6 @@ public class SeqlogoClient extends OpalClient {
         if (title!=null) cmdArgs += " -t "+title;
         in.setArgList(cmdArgs);
 
-        System.out.println(cmdArgs);
-        
         // add subject and query "files" to the input
         InputFileType[] infileArray = new InputFileType[1];
         

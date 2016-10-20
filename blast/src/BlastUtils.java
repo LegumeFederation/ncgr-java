@@ -190,6 +190,8 @@ public class BlastUtils {
      * The probabilities for each are set at the top. Longer sequences naturally get much larger scores, so this should be used to 
      * compare sequences of the same length.
      *
+     * Sequences consisting only of A and T get a score of zero.
+     *
      * @param  sequence a string sequence of DNA letters
      * @return an integer score
      */
@@ -197,19 +199,22 @@ public class BlastUtils {
 
         char[] letters = { 'A',  'T',  'C',  'G',  'W',  'K',  'R',  'M',  'Y',  'S',  'N'  };
         double[] probs = { 0.35, 0.35, 0.15, 0.15, 1.00, 0.50, 0.50, 0.50, 0.50, 0.30, 1.00 };
-        
-        char[] chars = sequence.toCharArray();
-        double totalProb = 1.00;
-        for (int i=0; i<chars.length; i++) {
-            for (int j=0; j<letters.length; j++) {
-                if (chars[i]==letters[j]) {
-                    totalProb *= probs[j];
-                    j = chars.length;
+
+        if (sequence.contains("C") || sequence.contains("G")) {
+            char[] chars = sequence.toCharArray();
+            double totalProb = 1.00;
+            for (int i=0; i<chars.length; i++) {
+                for (int j=0; j<letters.length; j++) {
+                    if (chars[i]==letters[j]) {
+                        totalProb *= probs[j];
+                        j = chars.length;
+                    }
                 }
             }
+            return -Math.log10(totalProb);
+        } else {
+            return 0.0;
         }
-
-        return -Math.log10(totalProb);
         
     }
 

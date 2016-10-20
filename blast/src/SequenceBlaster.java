@@ -71,28 +71,18 @@ public class SequenceBlaster {
             DNASequence topMotif = null;
             List<DNASequence> logoMotifs = new ArrayList<DNASequence>();
             for (SequenceHits seqHits : seqHitsSet.descendingSet()) {
-
-                // keep this motif iff it hits against each ID in only one place
-                boolean keep = true;
-                TreeSet<String> idSet = new TreeSet<String>();
-                for (String hit : seqHits.uniqueHits) {
-                    String[] pieces = hit.split(":");
-                    String id = pieces[0];
-                    if (idSet.contains(id)) keep = false;
-                    idSet.add(id);
-                }
-                // sometimes you get two nearly identical input sequences; they'll give score = -1
-                if (keep && seqHits.score>0) {
+                // motifs without G or C get discarded
+                if (seqHits.score>0) {
                     
                     count++;
                     
                     if (first) {
+                        first = false;
                         // save the top motif for pairwise alignments
                         topMotif = new DNASequence(seqHits.sequence);
                         logoMotifs.add(topMotif);
                         System.out.print(seqHits.sequence+"\t["+seqHits.score+"]["+seqHits.uniqueHits.size()+"]");
                         System.out.println("\tscore\tdistance\tsimilarity");
-                        first = false;
                     } else {
                         // do a pairwise alignment with topMotif and add to logo list if close enough
                         // pairwise alignment choices: AnchoredPairwiseSequenceAligner, GuanUberbacher, NeedlemanWunsch, SmithWaterman
