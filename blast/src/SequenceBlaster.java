@@ -175,16 +175,18 @@ public class SequenceBlaster {
 
             // now scan through the motifs, doing pairwise alignment with the top one to create a list for logo creation
             long pairwiseStart = System.currentTimeMillis();
+            int count = 0;
             boolean first = true;
             DNASequence topMotif = null;
             List<DNASequence> logoMotifs = new ArrayList<DNASequence>();
             for (SequenceHits seqHits : seqHitsSet.descendingSet()) {
+                count++;
                 if (first) {
                     first = false;
                     // save the top motif for pairwise alignments
                     topMotif = new DNASequence(seqHits.sequence);
                     logoMotifs.add(topMotif);
-                    System.out.print(seqHits.sequence+"\t["+seqHits.score+"]["+seqHits.uniqueHits.size()+"]");
+                    System.out.print(count+"."+seqHits.sequence+"\t["+seqHits.score+"]["+seqHits.uniqueHits.size()+"]");
                     System.out.println("\tscore\tsimilarity\tdistance");
                 } else {
                     // do a pairwise alignment with topMotif and add to logo list if close enough
@@ -206,7 +208,7 @@ public class SequenceBlaster {
                     double score = aligner.getScore();
                     double distance = aligner.getDistance();
                     double similarity = aligner.getSimilarity();
-                    System.out.print(seqHits.sequence+"\t["+seqHits.score+"]["+seqHits.uniqueHits.size()+"]");
+                    System.out.print(count+"."+seqHits.sequence+"\t["+seqHits.score+"]["+seqHits.uniqueHits.size()+"]");
                     System.out.print("\t"+rnd.format(score)+"\t"+dec.format(similarity)+"\t"+dec.format(distance));
                     if (distance<maxDistance) {
                         logoMotifs.add(thisMotif);
