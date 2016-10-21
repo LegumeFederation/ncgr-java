@@ -40,7 +40,6 @@ public class SequenceBlaster {
     static boolean UNGAPPED = true;
 
     // BlastUtils.blastSequenceHits parameters
-    static int MIN_MOTIF_SCORE = 539;
     static int MAX_MOTIF_LENGTH = 27;
     
     // BioJava alignment parameters
@@ -82,7 +81,7 @@ public class SequenceBlaster {
             
             // BLAST the FASTA!
             long blastStart = System.currentTimeMillis();
-            TreeSet<SequenceHits> seqHitsSet = BlastUtils.blastSequenceHits(fastaFilename, blastParameters, MIN_MOTIF_SCORE, MAX_MOTIF_LENGTH);
+            TreeSet<SequenceHits> seqHitsSet = BlastUtils.blastSequenceHits(fastaFilename, blastParameters, MAX_MOTIF_LENGTH);
             long blastEnd = System.currentTimeMillis();
 
             // collect top numKept singular motifs for further analysis

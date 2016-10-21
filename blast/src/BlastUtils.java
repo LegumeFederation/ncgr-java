@@ -94,7 +94,7 @@ public class BlastUtils {
      * @param  parameters a map of parameter names (without the dash) and values
      * @return a TreeSet containing resulting SequenceHits sorted by the SequenceHits comparator
      */
-    public static TreeSet<SequenceHits> blastSequenceHits(String multiFastaFilename, Map<String,String> parameters, int minMotifScore, int maxMotifLength) throws Exception {
+    public static TreeSet<SequenceHits> blastSequenceHits(String multiFastaFilename, Map<String,String> parameters, int maxMotifLength) throws Exception {
     
         // we'll add the found hits to this map of SequenceHits
         TreeMap<String,SequenceHits> seqHitsMap = new TreeMap<String,SequenceHits>();
@@ -149,7 +149,6 @@ public class BlastUtils {
                                             SequenceHit seqHit = new SequenceHit(queryID, hitID, hsp);
                                             // cull motifs based on their size and content
                                             boolean keep = true;
-                                            keep = keep && seqHit.score>=minMotifScore;
                                             keep = keep && seqHit.sequence.length()<=maxMotifLength;
                                             if (keep) {
                                                 if (seqHitsMap.containsKey(seqHit.sequence)) {
