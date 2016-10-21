@@ -35,7 +35,7 @@ import org.biojava.nbio.core.sequence.template.Sequence;
 import org.biojava.nbio.core.util.ConcurrencyTools;
 
 /**
- * Load a multi-fasta containing sequences, and search them for common motifs using the BlastUtils blastSequenceHits utility.
+ * Load a multi-fasta containing sequences, and search them for common motifs.
  *
  * @author Sam Hokin
  */
@@ -186,7 +186,7 @@ public class SequenceBlaster {
                     // save the top motif for pairwise alignments
                     topMotif = new DNASequence(seqHits.sequence);
                     logoMotifs.add(topMotif);
-                    System.out.print(count+"."+seqHits.sequence+"\t["+seqHits.score+"]["+seqHits.uniqueHits.size()+"]");
+                    System.out.print(count+"."+seqHits.sequence+"\t["+seqHits.score+"]["+seqHits.uniqueIDs.size()+"]");
                     System.out.println("\tscore\tsimilarity\tdistance");
                 } else {
                     // do a pairwise alignment with topMotif and add to logo list if close enough
@@ -208,7 +208,7 @@ public class SequenceBlaster {
                     double score = aligner.getScore();
                     double distance = aligner.getDistance();
                     double similarity = aligner.getSimilarity();
-                    System.out.print(count+"."+seqHits.sequence+"\t["+seqHits.score+"]["+seqHits.uniqueHits.size()+"]");
+                    System.out.print(count+"."+seqHits.sequence+"\t["+seqHits.score+"]["+seqHits.uniqueIDs.size()+"]");
                     System.out.print("\t"+rnd.format(score)+"\t"+dec.format(similarity)+"\t"+dec.format(distance));
                     if (distance<maxDistance) {
                         logoMotifs.add(thisMotif);
@@ -217,25 +217,6 @@ public class SequenceBlaster {
                         System.out.println();
                     }
                 }
-                // // WEIGHTED FASTA-PER-MOTIF VERSION
-                // double weight = (double)seqHits.score/(double)maxScore;
-                // System.out.println(">WEIGHTS "+weight);
-                // System.out.println(">"+seqHits.uniqueHits.size()+"x"+seqHits.sequence.length()+"["+seqHits.score+"]"+seqHits.sequence);
-                // System.out.println(seqHits.sequence);
-                // // FASTA-PER-HIT VERSION
-                // for (String hit : seqHits.uniqueHits) {
-                //     System.out.println(">["+seqHits.score+"]["+seqHits.sequence.length()+"]"+hit.replace(' ','-'));
-                //     System.out.println(seqHits.sequence);
-                // }
-                // // TEXT VERSION
-                // System.out.println(seqHits.sequence+"["+seqHits.score+"]");
-                // for (String hit : seqHits.uniqueHits) {
-                //     String[] pieces = hit.split(":");
-                //     String id = pieces[0];
-                //     System.out.println("\t"+hit);
-                // }
-                // MINIMAL TEXT VERSION
-                // System.out.println(seqHits.sequence+"\t["+seqHits.score+"]["+seqHits.uniqueHits.size()+"]");
             }
 
             long pairwiseEnd = System.currentTimeMillis();

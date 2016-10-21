@@ -16,18 +16,22 @@ public class SequenceHits implements Comparable {
     public int score;                         // the full score = sum of SequenceHit.score values.
     public TreeSet<SequenceHit> sequenceHits; // the SequenceHit instances contained within
     public TreeSet<String> uniqueHits;        // a set of strings representing unique hits of the form seqID:start-end
+    public TreeSet<String> uniqueIDs;         // a set of unique query and hit IDs
 
     /**
      * Create a new SequenceHits instance from a SequenceHit
      */
     public SequenceHits(SequenceHit sequenceHit) {
+        this.sequenceHits = new TreeSet<SequenceHit>();
+        this.uniqueHits = new TreeSet<String>();
+        this.uniqueIDs = new TreeSet<String>();
         this.sequence = sequenceHit.sequence;
         this.score = sequenceHit.score*2; // double since already two hits from the start
-        this.sequenceHits = new TreeSet<SequenceHit>();
         this.sequenceHits.add(sequenceHit);
-        this.uniqueHits = new TreeSet<String>();
         this.uniqueHits.add(sequenceHit.getQueryLoc());
         this.uniqueHits.add(sequenceHit.getHitLoc());
+        this.uniqueIDs.add(sequenceHit.queryID);
+        this.uniqueIDs.add(sequenceHit.hitID);
     }
         
     /**
@@ -39,16 +43,12 @@ public class SequenceHits implements Comparable {
     }
 
     /**
-     * Order by score, then hits, then alphabetic
+     * Order by score, then alphabetic
      */
     public int compareTo(Object o) {
         SequenceHits that = (SequenceHits) o;
-        int thisHits = this.sequenceHits.size();
-        int thatHits = that.sequenceHits.size();
         if (this.score!=that.score) {
             return this.score-that.score;
-        } else if (thisHits!=thatHits) {
-            return thisHits - thatHits;
         } else {
             return this.sequence.compareTo(that.sequence);
         }
@@ -58,11 +58,12 @@ public class SequenceHits implements Comparable {
      * Adjust the score and add a SequenceHit to the set and add to uniqueHits set. The score is only incremented for new IDs.
      */
     public void addSequenceHit(SequenceHit sequenceHit) {
-        if (!containsID(sequenceHit.queryID)) score += sequenceHit.score;
-        if (!containsID(sequenceHit.hitID)) score += sequenceHit.score;
         sequenceHits.add(sequenceHit);
         uniqueHits.add(sequenceHit.getQueryLoc());
         uniqueHits.add(sequenceHit.getHitLoc());
+        uniqueIDs.add(sequenceHit.queryID);
+        uniqueIDs.add(sequenceHit.hitID);
+        score = uniqueIDs.size()*sequenceHit.score;
     }
 
     /**
