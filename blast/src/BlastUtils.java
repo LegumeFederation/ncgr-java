@@ -85,106 +85,14 @@ public class BlastUtils {
         return blastOutput;
     }
     
-
-    /**
-     * Run blast between all the sequences in the provided file, returning a TreeSet of SequenceHits summarizing the results.
-     * Uses temp storage to create the many FASTA files used in the BLAST command line.
-     *
-     * @param  multiFastaFilename the name of a multi-fasta file containing all the sequences to search for common motifs
-     * @param  parameters a map of parameter names (without the dash) and values
-     * @return a TreeSet containing resulting SequenceHits sorted by the SequenceHits comparator
-     */
-    public static TreeSet<SequenceHits> blastSequenceHits(String multiFastaFilename, Map<String,String> parameters, int maxMotifLength) throws Exception {
-    
-        // we'll add the found hits to this map of SequenceHits
-        TreeMap<String,SequenceHits> seqHitsMap = new TreeMap<String,SequenceHits>();
-
-        FastaReaderHelper frh = new FastaReaderHelper();
-        FastaWriterHelper fwh = new FastaWriterHelper();
-
-        // pull out the individual sequences with BioJava help
-        File multiFasta = new File(multiFastaFilename);
-        LinkedHashMap<String,DNASequence> sequenceMap = null;
-        try {
-            sequenceMap = frh.readFastaDNASequence(multiFasta);
-        } catch (IOException ex) {
-            ex.printStackTrace();
-            System.exit(1);
-        }
-
-        // loop through each sequence as query against the remaining as subject
-        for (DNASequence querySequence : sequenceMap.values()) {
-
-            // write out the query fasta
-            String queryID = querySequence.getOriginalHeader();
-            File queryFile = File.createTempFile("query", ".fasta");
-            fwh.writeSequence(queryFile, querySequence);
-            String queryFilePath = queryFile.getAbsolutePath();
-            
-            // create the subject multi-fasta = all sequences but the query sequence
-            LinkedHashMap<String,DNASequence> subjectMap = new LinkedHashMap<String,DNASequence>(sequenceMap);
-            subjectMap.remove(queryID);
-            
-            // write out the subject file
-            File subjectFile = File.createTempFile("subject", ".fasta");
-            fwh.writeNucleotideSequence(subjectFile, subjectMap.values());
-            String subjectFilePath = subjectFile.getAbsolutePath();
-            
-            // now run BLAST with given parameters
-            BlastOutput blastOutput = runBlastn(subjectFilePath, queryFilePath, parameters);
-            BlastOutputIterations iterations = blastOutput.getBlastOutputIterations();
-            if (iterations!=null) {
-                List<Iteration> iterationList = iterations.getIteration();
-                if (iterationList!=null) {
-                    for (Iteration iteration : iterationList) {
-                        if (iteration.getIterationMessage()==null) {
-                            List<Hit> hitList = iteration.getIterationHits().getHit();
-                            for (Hit hit : hitList) {
-                                String hitID = hit.getHitDef();
-                                HitHsps hsps = hit.getHitHsps();
-                                if (hsps!=null) {
-                                    List<Hsp> hspList = hsps.getHsp();
-                                    if (hspList!=null) {
-                                        for (Hsp hsp : hspList) {
-                                            SequenceHit seqHit = new SequenceHit(queryID, hitID, hsp);
-                                            // cull motifs based on their size and content
-                                            boolean keep = true;
-                                            keep = keep && seqHit.sequence.length()<=maxMotifLength;
-                                            if (keep) {
-                                                if (seqHitsMap.containsKey(seqHit.sequence)) {
-                                                    SequenceHits seqHits = seqHitsMap.get(seqHit.sequence);
-                                                    seqHits.addSequenceHit(seqHit);
-                                                } else {
-                                                    SequenceHits seqHits = new SequenceHits(seqHit);
-                                                    seqHitsMap.put(seqHit.sequence, seqHits);
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        // return output TreeSet, which is sorted by score
-        return new TreeSet<SequenceHits>(seqHitsMap.values());
-
-    }
-
     /**
      * Return a double score for an input DNA sequence equal to the log of the inverse of the probability of each letter being produced randomly.
-     * The probabilities for each are set at the top. Longer sequences naturally get much larger scores, so this should be used to 
-     * compare sequences of the same length.
+     * The probabilities for each are set at the top. Longer sequences naturally get much larger scores.
      *
      * @param  sequence a string sequence of DNA letters
-     * @param  requireCG if true return zero if sequence does not contain a C or G
      * @return an integer score
      */
-    public static double scoreDNASequence(String sequence, boolean requireCG) {
-        if (requireCG && !sequence.contains("C") && !sequence.contains("G")) return 0.0;
+    public static double scoreDNASequence(String sequence) {
         char[] letters = { 'A',  'T',  'C',  'G',  'W',  'K',  'R',  'M',  'Y',  'S',  'N'  };
         double[] probs = { 0.35, 0.35, 0.15, 0.15, 1.00, 0.50, 0.50, 0.50, 0.50, 0.30, 1.00 };
         char[] chars = sequence.toCharArray();

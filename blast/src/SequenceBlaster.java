@@ -1,10 +1,13 @@
 package org.ncgr.blast;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.TreeMap;
 import java.util.Set;
 import java.util.TreeSet;
 import java.text.DecimalFormat;
@@ -22,6 +25,7 @@ import org.biojava.nbio.core.alignment.template.SequencePair;
 import org.biojava.nbio.core.alignment.template.SubstitutionMatrix;
 import org.biojava.nbio.core.sequence.DNASequence;
 import org.biojava.nbio.core.sequence.compound.NucleotideCompound;
+import org.biojava.nbio.core.sequence.io.FastaReaderHelper;
 import org.biojava.nbio.core.sequence.io.FastaWriterHelper;
 import org.biojava.nbio.core.sequence.template.Sequence;
 import org.biojava.nbio.core.util.ConcurrencyTools;
@@ -79,12 +83,92 @@ public class SequenceBlaster {
             blastParameters.put("perc_identity", PERC_IDENTITY);
             if (UNGAPPED) blastParameters.put("ungapped", "");
             
-            // BLAST the FASTA!
+            // timing
             long blastStart = System.currentTimeMillis();
-            TreeSet<SequenceHits> seqHitsSet = BlastUtils.blastSequenceHits(fastaFilename, blastParameters, MAX_MOTIF_LENGTH);
+
+            // Run blast between all the sequences in the provided file, returning a TreeSet of SequenceHits summarizing the results.
+            // Uses temp storage to create the many FASTA files used in the BLAST command line.
+
+            // we'll add the found hits to this map of SequenceHits
+            TreeMap<String,SequenceHits> seqHitsMap = new TreeMap<String,SequenceHits>();
+            FastaReaderHelper frh = new FastaReaderHelper();
+            FastaWriterHelper fwh = new FastaWriterHelper();
+
+            // pull out the individual sequences with BioJava help
+            File multiFasta = new File(fastaFilename);
+            LinkedHashMap<String,DNASequence> sequenceMap = null;
+            try {
+                sequenceMap = frh.readFastaDNASequence(multiFasta);
+            } catch (IOException ex) {
+                ex.printStackTrace();
+                System.exit(1);
+            }
+
+            // loop through each sequence as query against the remaining as subject
+            for (DNASequence querySequence : sequenceMap.values()) {
+                
+                // write out the query fasta
+                String queryID = querySequence.getOriginalHeader();
+                File queryFile = File.createTempFile("query", ".fasta");
+                fwh.writeSequence(queryFile, querySequence);
+                String queryFilePath = queryFile.getAbsolutePath();
+                
+                // create the subject multi-fasta = all sequences but the query sequence
+                LinkedHashMap<String,DNASequence> subjectMap = new LinkedHashMap<String,DNASequence>(sequenceMap);
+                subjectMap.remove(queryID);
+                
+                // write out the subject file
+                File subjectFile = File.createTempFile("subject", ".fasta");
+                fwh.writeNucleotideSequence(subjectFile, subjectMap.values());
+                String subjectFilePath = subjectFile.getAbsolutePath();
+                
+                // now run BLAST with given parameters
+                BlastOutput blastOutput = BlastUtils.runBlastn(subjectFilePath, queryFilePath, blastParameters);
+                BlastOutputIterations iterations = blastOutput.getBlastOutputIterations();
+                if (iterations!=null) {
+                    List<Iteration> iterationList = iterations.getIteration();
+                    if (iterationList!=null) {
+                        for (Iteration iteration : iterationList) {
+                            if (iteration.getIterationMessage()==null) {
+                                List<Hit> hitList = iteration.getIterationHits().getHit();
+                                for (Hit hit : hitList) {
+                                    String hitID = hit.getHitDef();
+                                    HitHsps hsps = hit.getHitHsps();
+                                    if (hsps!=null) {
+                                        List<Hsp> hspList = hsps.getHsp();
+                                        if (hspList!=null) {
+                                            for (Hsp hsp : hspList) {
+                                                SequenceHit seqHit = new SequenceHit(queryID, hitID, hsp);
+                                                // cull motifs based on their size and content
+                                                boolean keep = true;
+                                                keep = keep && (seqHit.sequence.contains("C") || seqHit.sequence.contains("G"));
+                                                keep = keep && seqHit.sequence.length()<=MAX_MOTIF_LENGTH;
+                                                if (keep) {
+                                                    if (seqHitsMap.containsKey(seqHit.sequence)) {
+                                                        SequenceHits seqHits = seqHitsMap.get(seqHit.sequence);
+                                                        seqHits.addSequenceHit(seqHit);
+                                                    } else {
+                                                        SequenceHits seqHits = new SequenceHits(seqHit);
+                                                        seqHitsMap.put(seqHit.sequence, seqHits);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // load the collected SequenceHits into a sorted set
+            TreeSet<SequenceHits> seqHitsSet = new TreeSet<SequenceHits>(seqHitsMap.values());
+            
+            // timing
             long blastEnd = System.currentTimeMillis();
 
-            // collect top numKept singular motifs for further analysis
+            // now scan through the motifs, doing pairwise alignment with the top one to create a list for logo creation
             long pairwiseStart = System.currentTimeMillis();
             boolean first = true;
             DNASequence topMotif = null;
@@ -145,7 +229,7 @@ public class SequenceBlaster {
 
             if (logoMotifs.size()>1) {
 
-                // do a multiple alignment of the kept motifs and write to a FASTA for sequence logo generation (which may be uninformative)
+                // do a multiple alignment of the logo motifs and write to a FASTA for sequence logo generation (which may be uninformative)
                 multiStart = System.currentTimeMillis();
                 Object[] settings = new Object[3];
                 settings[0] = gapPenalty;
