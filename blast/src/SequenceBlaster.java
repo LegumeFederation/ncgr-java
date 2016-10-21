@@ -38,8 +38,9 @@ public class SequenceBlaster {
     static String WORD_SIZE = "8";
     static String PERC_IDENTITY = "80";
     static boolean UNGAPPED = true;
-    
-    // toss motifs greater than this length
+
+    // BlastUtils.blastSequenceHits parameters
+    static int MIN_MOTIF_SCORE = 539;
     static int MAX_MOTIF_LENGTH = 27;
     
     // BioJava alignment parameters
@@ -81,67 +82,59 @@ public class SequenceBlaster {
             
             // BLAST the FASTA!
             long blastStart = System.currentTimeMillis();
-            TreeSet<SequenceHits> seqHitsSet = BlastUtils.blastSequenceHits(fastaFilename, blastParameters);
+            TreeSet<SequenceHits> seqHitsSet = BlastUtils.blastSequenceHits(fastaFilename, blastParameters, MIN_MOTIF_SCORE, MAX_MOTIF_LENGTH);
             long blastEnd = System.currentTimeMillis();
 
             // collect top numKept singular motifs for further analysis
             long pairwiseStart = System.currentTimeMillis();
             boolean first = true;
-            int count = 0;
             DNASequence topMotif = null;
             List<DNASequence> logoMotifs = new ArrayList<DNASequence>();
             for (SequenceHits seqHits : seqHitsSet.descendingSet()) {
-                // filter on sequence attributes
-                boolean keep = true;
-                keep = keep && seqHits.sequence.length()<=MAX_MOTIF_LENGTH;
-                keep = keep && (seqHits.sequence.contains("C") || seqHits.sequence.contains("G"));
-                if (keep) {
-                    count++;
-                    if (first) {
-                        first = false;
-                        // save the top motif for pairwise alignments
-                        topMotif = new DNASequence(seqHits.sequence);
-                        logoMotifs.add(topMotif);
-                        System.out.print(seqHits.sequence+"\t["+seqHits.score+"]["+seqHits.uniqueHits.size()+"]");
-                        System.out.println("\tscore\tdistance\tsimilarity");
+                if (first) {
+                    first = false;
+                    // save the top motif for pairwise alignments
+                    topMotif = new DNASequence(seqHits.sequence);
+                    logoMotifs.add(topMotif);
+                    System.out.print(seqHits.sequence+"\t["+seqHits.score+"]["+seqHits.uniqueHits.size()+"]");
+                    System.out.println("\tscore\tdistance\tsimilarity");
+                } else {
+                    // do a pairwise alignment with topMotif and add to logo list if close enough
+                    // pairwise alignment choices: AnchoredPairwiseSequenceAligner, GuanUberbacher, NeedlemanWunsch, SmithWaterman
+                    DNASequence thisMotif = new DNASequence(seqHits.sequence);
+                    AnchoredPairwiseSequenceAligner<DNASequence,NucleotideCompound> aligner =
+                        new AnchoredPairwiseSequenceAligner<DNASequence,NucleotideCompound>(thisMotif, topMotif, gapPenalty, subMatrix);
+                    double score = aligner.getScore();
+                    double distance = aligner.getDistance();
+                    double similarity = aligner.getSimilarity();
+                    System.out.print(seqHits.sequence+"\t["+seqHits.score+"]["+seqHits.uniqueHits.size()+"]");
+                    System.out.print("\t"+rnd.format(score)+"\t"+dec.format(distance)+"\t"+dec.format(similarity));
+                    if (distance<maxDistance) {
+                        logoMotifs.add(thisMotif);
+                        System.out.println("\t*");
                     } else {
-                        // do a pairwise alignment with topMotif and add to logo list if close enough
-                        // pairwise alignment choices: AnchoredPairwiseSequenceAligner, GuanUberbacher, NeedlemanWunsch, SmithWaterman
-                        DNASequence thisMotif = new DNASequence(seqHits.sequence);
-                        AnchoredPairwiseSequenceAligner<DNASequence,NucleotideCompound> aligner =
-                            new AnchoredPairwiseSequenceAligner<DNASequence,NucleotideCompound>(thisMotif, topMotif, gapPenalty, subMatrix);
-                        double score = aligner.getScore();
-                        double distance = aligner.getDistance();
-                        double similarity = aligner.getSimilarity();
-                        System.out.print(seqHits.sequence+"\t["+seqHits.score+"]["+seqHits.uniqueHits.size()+"]");
-                        System.out.print("\t"+rnd.format(score)+"\t"+dec.format(distance)+"\t"+dec.format(similarity));
-                        if (distance<maxDistance) {
-                            logoMotifs.add(thisMotif);
-                            System.out.println("\t*"+count);
-                        } else {
-                            System.out.println();
-                        }
+                        System.out.println();
                     }
-                    // // WEIGHTED FASTA-PER-MOTIF VERSION
-                    // double weight = (double)seqHits.score/(double)maxScore;
-                    // System.out.println(">WEIGHTS "+weight);
-                    // System.out.println(">"+seqHits.uniqueHits.size()+"x"+seqHits.sequence.length()+"["+seqHits.score+"]"+seqHits.sequence);
-                    // System.out.println(seqHits.sequence);
-                    // // FASTA-PER-HIT VERSION
-                    // for (String hit : seqHits.uniqueHits) {
-                    //     System.out.println(">["+seqHits.score+"]["+seqHits.sequence.length()+"]"+hit.replace(' ','-'));
-                    //     System.out.println(seqHits.sequence);
-                    // }
-                    // // TEXT VERSION
-                    // System.out.println(seqHits.sequence+"["+seqHits.score+"]");
-                    // for (String hit : seqHits.uniqueHits) {
-                    //     String[] pieces = hit.split(":");
-                    //     String id = pieces[0];
-                    //     System.out.println("\t"+hit);
-                    // }
-                    // MINIMAL TEXT VERSION
-                    // System.out.println(seqHits.sequence+"\t["+seqHits.score+"]["+seqHits.uniqueHits.size()+"]");
                 }
+                // // WEIGHTED FASTA-PER-MOTIF VERSION
+                // double weight = (double)seqHits.score/(double)maxScore;
+                // System.out.println(">WEIGHTS "+weight);
+                // System.out.println(">"+seqHits.uniqueHits.size()+"x"+seqHits.sequence.length()+"["+seqHits.score+"]"+seqHits.sequence);
+                // System.out.println(seqHits.sequence);
+                // // FASTA-PER-HIT VERSION
+                // for (String hit : seqHits.uniqueHits) {
+                //     System.out.println(">["+seqHits.score+"]["+seqHits.sequence.length()+"]"+hit.replace(' ','-'));
+                //     System.out.println(seqHits.sequence);
+                // }
+                // // TEXT VERSION
+                // System.out.println(seqHits.sequence+"["+seqHits.score+"]");
+                // for (String hit : seqHits.uniqueHits) {
+                //     String[] pieces = hit.split(":");
+                //     String id = pieces[0];
+                //     System.out.println("\t"+hit);
+                // }
+                // MINIMAL TEXT VERSION
+                // System.out.println(seqHits.sequence+"\t["+seqHits.score+"]["+seqHits.uniqueHits.size()+"]");
             }
 
             long pairwiseEnd = System.currentTimeMillis();

@@ -21,7 +21,8 @@ public class SequenceHit implements Comparable {
         this.queryID = queryID;
         this.hitID = hitID;
         this.hsp = hsp;
-        this.score = (int) Math.round(100.0*BlastUtils.scoreDNASequence(sequence));
+        // set score to zero if sequence doesn't contain C or G with true below
+        this.score = (int) Math.round(100.0*BlastUtils.scoreDNASequence(sequence, true));
     }
 
     /**

@@ -22,7 +22,7 @@ public class SequenceHits implements Comparable {
      */
     public SequenceHits(SequenceHit sequenceHit) {
         this.sequence = sequenceHit.sequence;
-        this.score = sequenceHit.score;
+        this.score = sequenceHit.score*2; // double since already two hits from the start
         this.sequenceHits = new TreeSet<SequenceHit>();
         this.sequenceHits.add(sequenceHit);
         this.uniqueHits = new TreeSet<String>();

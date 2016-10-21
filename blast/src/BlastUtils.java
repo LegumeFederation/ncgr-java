@@ -10,7 +10,6 @@ import java.util.LinkedHashMap;
 import java.util.TreeMap;
 import java.util.TreeSet;
 
-
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Unmarshaller;
@@ -95,7 +94,7 @@ public class BlastUtils {
      * @param  parameters a map of parameter names (without the dash) and values
      * @return a TreeSet containing resulting SequenceHits sorted by the SequenceHits comparator
      */
-    public static TreeSet<SequenceHits> blastSequenceHits(String multiFastaFilename, Map<String,String> parameters) throws Exception {
+    public static TreeSet<SequenceHits> blastSequenceHits(String multiFastaFilename, Map<String,String> parameters, int minMotifScore, int maxMotifLength) throws Exception {
     
         // we'll add the found hits to this map of SequenceHits
         TreeMap<String,SequenceHits> seqHitsMap = new TreeMap<String,SequenceHits>();
@@ -148,12 +147,18 @@ public class BlastUtils {
                                     if (hspList!=null) {
                                         for (Hsp hsp : hspList) {
                                             SequenceHit seqHit = new SequenceHit(queryID, hitID, hsp);
-                                            if (seqHitsMap.containsKey(seqHit.sequence)) {
-                                                SequenceHits seqHits = seqHitsMap.get(seqHit.sequence);
-                                                seqHits.addSequenceHit(seqHit);
-                                            } else {
-                                                SequenceHits seqHits = new SequenceHits(seqHit);
-                                                seqHitsMap.put(seqHit.sequence, seqHits);
+                                            // cull motifs based on their size and content
+                                            boolean keep = true;
+                                            keep = keep && seqHit.score>=minMotifScore;
+                                            keep = keep && seqHit.sequence.length()<=maxMotifLength;
+                                            if (keep) {
+                                                if (seqHitsMap.containsKey(seqHit.sequence)) {
+                                                    SequenceHits seqHits = seqHitsMap.get(seqHit.sequence);
+                                                    seqHits.addSequenceHit(seqHit);
+                                                } else {
+                                                    SequenceHits seqHits = new SequenceHits(seqHit);
+                                                    seqHitsMap.put(seqHit.sequence, seqHits);
+                                                }
                                             }
                                         }
                                     }
@@ -176,9 +181,11 @@ public class BlastUtils {
      * compare sequences of the same length.
      *
      * @param  sequence a string sequence of DNA letters
+     * @param  requireCG if true return zero if sequence does not contain a C or G
      * @return an integer score
      */
-    public static double scoreDNASequence(String sequence) {
+    public static double scoreDNASequence(String sequence, boolean requireCG) {
+        if (requireCG && !sequence.contains("C") && !sequence.contains("G")) return 0.0;
         char[] letters = { 'A',  'T',  'C',  'G',  'W',  'K',  'R',  'M',  'Y',  'S',  'N'  };
         double[] probs = { 0.35, 0.35, 0.15, 0.15, 1.00, 0.50, 0.50, 0.50, 0.50, 0.30, 1.00 };
         char[] chars = sequence.toCharArray();
