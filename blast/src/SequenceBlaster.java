@@ -16,7 +16,11 @@ import org.biojava.nbio.alignment.Alignments;
 import org.biojava.nbio.alignment.FractionalIdentityScorer;
 import org.biojava.nbio.alignment.FractionalIdentityInProfileScorer;
 import org.biojava.nbio.alignment.SimpleGapPenalty;
+import org.biojava.nbio.alignment.NeedlemanWunsch;
+import org.biojava.nbio.alignment.SmithWaterman;
 import org.biojava.nbio.alignment.routines.AnchoredPairwiseSequenceAligner;
+import org.biojava.nbio.alignment.routines.GuanUberbacher;
+import org.biojava.nbio.alignment.template.AbstractMatrixAligner;
 import org.biojava.nbio.alignment.template.GapPenalty;
 import org.biojava.nbio.core.alignment.matrices.SubstitutionMatrixHelper;
 import org.biojava.nbio.core.alignment.template.AlignedSequence;
@@ -50,6 +54,7 @@ public class SequenceBlaster {
     static double MAX_DISTANCE = 0.2; // maximum distance of a motif from top-scoring motif to be used in sequence logo
     static int GOP = 10;              // gap open penalty for pairwise and multi-sequence alignments
     static int GEP = 1;               // gap extension penalty for pairwise and multi-sequence alignments
+    static String ALIGNER = "SmithWaterman"; // AnchoredPairwiseSequenceAligner, GuanUberbacher, NeedlemanWunsch, SmithWaterman
 
     static DecimalFormat dec = new DecimalFormat("0.0000");
     static DecimalFormat rnd = new DecimalFormat("+00;-00");
@@ -180,18 +185,29 @@ public class SequenceBlaster {
                     topMotif = new DNASequence(seqHits.sequence);
                     logoMotifs.add(topMotif);
                     System.out.print(seqHits.sequence+"\t["+seqHits.score+"]["+seqHits.uniqueHits.size()+"]");
-                    System.out.println("\tscore\tdistance\tsimilarity");
+                    System.out.println("\tscore\tsimilarity\tdistance");
                 } else {
                     // do a pairwise alignment with topMotif and add to logo list if close enough
-                    // pairwise alignment choices: AnchoredPairwiseSequenceAligner, GuanUberbacher, NeedlemanWunsch, SmithWaterman
                     DNASequence thisMotif = new DNASequence(seqHits.sequence);
-                    AnchoredPairwiseSequenceAligner<DNASequence,NucleotideCompound> aligner =
-                        new AnchoredPairwiseSequenceAligner<DNASequence,NucleotideCompound>(thisMotif, topMotif, gapPenalty, subMatrix);
+                    // choose the desired pairwise aligner
+                    AbstractMatrixAligner<DNASequence,NucleotideCompound> aligner = null;
+                    if (ALIGNER.equals("AnchoredPairwiseSequenceAligner")) {
+                        aligner = new AnchoredPairwiseSequenceAligner<DNASequence,NucleotideCompound>(thisMotif, topMotif, gapPenalty, subMatrix);
+                    } else if (ALIGNER.equals("GuanUberbacher")) {
+                        aligner = new GuanUberbacher<DNASequence,NucleotideCompound>(thisMotif, topMotif, gapPenalty, subMatrix);
+                    } else if (ALIGNER.equals("NeedlemanWunsch")) {
+                        aligner = new NeedlemanWunsch<DNASequence,NucleotideCompound>(thisMotif, topMotif, gapPenalty, subMatrix);
+                    } else if (ALIGNER.equals("SmithWaterman")) {
+                        aligner = new SmithWaterman<DNASequence,NucleotideCompound>(thisMotif, topMotif, gapPenalty, subMatrix);
+                    } else {
+                        System.err.println("ERROR: ALIGNER must be one of AnchoredPairwiseSequenceAligner, GuanUberbacher, NeedlemanWunsch, SmithWaterman");
+                        System.exit(1);
+                    }
                     double score = aligner.getScore();
                     double distance = aligner.getDistance();
                     double similarity = aligner.getSimilarity();
                     System.out.print(seqHits.sequence+"\t["+seqHits.score+"]["+seqHits.uniqueHits.size()+"]");
-                    System.out.print("\t"+rnd.format(score)+"\t"+dec.format(distance)+"\t"+dec.format(similarity));
+                    System.out.print("\t"+rnd.format(score)+"\t"+dec.format(similarity)+"\t"+dec.format(distance));
                     if (distance<maxDistance) {
                         logoMotifs.add(thisMotif);
                         System.out.println("\t*");
