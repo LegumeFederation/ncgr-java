@@ -75,9 +75,8 @@ public class PubMedSummary {
 
         // "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&id=25283805"
 
-
         // form URL
-        String url = "http://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&id="+id;
+        String url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?db=pubmed&id="+id;
 
         // parse the URL response
         DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
