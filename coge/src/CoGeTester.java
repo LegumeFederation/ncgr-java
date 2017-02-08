@@ -14,6 +14,11 @@ public class CoGeTester {
 
     public static void main(String[] args) {
 
+        if (args.length!=1) {
+            System.err.println("Usage: CoGeTester <searchTerm>");
+            System.exit(1);
+        }
+
         String searchTerm = args[0];
         
         CoGe coge = new CoGe("https://genomevolution.org/coge/api/v1/");
@@ -24,9 +29,14 @@ public class CoGeTester {
             System.out.println("");
             List<Organism> organisms = coge.searchOrganism(searchTerm);
             for (Organism o : organisms) {
-                System.out.println("id:"+o.id);
-                System.out.println("name:"+o.name);
-                System.out.println("description:"+o.description);
+                System.out.println("id\t"+o.id);
+                System.out.println("name\t"+o.name);
+                System.out.println("description\t"+o.description);
+                System.out.print("genomes");
+                for (Integer genome : o.genomes) {
+                    System.out.print("\t"+genome);
+                }
+                System.out.println("");
                 System.out.println("");
             }
         } catch (Exception ex) {
