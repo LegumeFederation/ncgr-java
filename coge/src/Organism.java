@@ -8,51 +8,29 @@ import java.util.ArrayList;
  *
  * @author Sam Hokin
  */
-public class Organism {
+public class Organism extends CoGeObject {
 
-    int id;
-    String name;
-    String description;
     List<Integer> genomes;
-
-    /**
-     * Construct given id, name, description but not genomes.
-     */
-    public Organism(int id, String name, String description) {
-        this.id = id;
-        this.name = name;
-        this.description = description;
-    }
 
     /**
      * Construct given id, name, description and genomes.
      */
-    public Organism(int id, String name, String description, List<Integer> genomes) {
-        this.id = id;
-        this.name = name;
-        this.description = description;
+    protected Organism(int id, String name, String description) {
+        super(id, name, description);
+    }
+
+    /**
+     * Construct from an instantiated CoGeObject.
+     */
+    protected Organism(CoGeObject object) {
+        super(object);
+    }
+
+    /**
+     * Set the genomes list.
+     */
+    protected void setGenomes(List<Integer> genomes) {
         this.genomes = genomes;
-    }
-
-    /**
-     * Return the id.
-     */
-    public int getId() {
-        return id;
-    }
-
-    /**
-     * Return the name.
-     */
-    public String getName() {
-        return name;
-    }
-
-    /**
-     * Return the description.
-     */
-    public String getDescription() {
-        return description;
     }
 
 }

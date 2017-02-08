@@ -8,11 +8,7 @@ import java.util.ArrayList;
  *
  * @author Sam Hokin
  */
-public class Genome {
-
-    int id;
-    String name;
-    String description;
+public class Genome extends CoGeObject {
 
     String link;
     String version;
@@ -26,31 +22,47 @@ public class Genome {
     /**
      * Construct given id, name, description but not genomes.
      */
-    public Genome(int id, String name, String description) {
-        this.id = id;
-        this.name = name;
-        this.description = description;
+    protected Genome(int id, String name, String description) {
+        super(id, name, description);
     }
 
     /**
-     * Return the id.
+     * Construct from an instantiated superclass.
      */
-    public int getId() {
-        return id;
+    protected Genome(CoGeObject object) {
+        super(object);
     }
 
-    /**
-     * Return the name.
-     */
-    public String getName() {
-        return name;
+    void setLink(String link) {
+        this.link = link;
     }
 
-    /**
-     * Return the description.
-     */
-    public String getDescription() {
-        return description;
+    void setVersion(String version) {
+        this.version = version;
+    }
+
+    void setOrganism(Organism organism) {
+        this.organism = organism;
+    }
+
+    void setSequenceType(String sequenceType) {
+        this.sequenceType = sequenceType;
+    }
+
+    void setRestricted(boolean restricted) {
+        this.restricted = restricted;
+    }
+
+    void setChromosomeCount(int chromosomeCount) {
+        this.chromosomeCount = chromosomeCount;
+    }
+
+    void setAdditionalMetadata(List<Metadata> additionalMetadata) {
+        this.additionalMetadata = additionalMetadata;
+    }
+
+    void setExperiments(List<Integer> experiments) {
+        this.experiments = experiments;
     }
 
 }

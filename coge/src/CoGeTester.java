@@ -1,5 +1,7 @@
 package org.ncgr.coge;
 
+import java.io.IOException;
+import java.util.Iterator;
 import java.util.List;
 
 import us.monoid.json.JSONArray;
@@ -32,9 +34,18 @@ public class CoGeTester {
                 System.out.println("id\t"+o.id);
                 System.out.println("name\t"+o.name);
                 System.out.println("description\t"+o.description);
-                System.out.print("genomes");
-                for (Integer genome : o.genomes) {
-                    System.out.print("\t"+genome);
+                for (Integer id : o.genomes) {
+                    try {
+                        Genome genome = coge.fetchGenome(id);
+                        System.out.println("genome\t"+genome.id+"\t"+genome.name+"\t"+genome.description);
+                    } catch (IOException ex) {
+                        String errorMessage = CoGe.getErrorMessage(ex);
+                        if (errorMessage.contains("Access denied")) {
+                            System.out.println("genome\t"+id+"\tAccess denied");
+                        } else {
+                            System.err.println(ex.toString());
+                        }
+                    }
                 }
                 System.out.println("");
                 System.out.println("");
