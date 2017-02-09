@@ -4,7 +4,7 @@
   <target name="init">
     <tstamp/>
 
-    <property name="resty" value="lib/resty-0.3.2.jar"/>
+    <property name="resty" value="lib/resty.jar"/>
     <property name="jar" value="ncgr-coge.jar"/>
 
   </target>

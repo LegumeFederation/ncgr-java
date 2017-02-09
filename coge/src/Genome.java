@@ -13,7 +13,7 @@ public class Genome extends CoGeObject {
     String link;
     String version;
     Organism organism;
-    String sequenceType;
+    SequenceType sequenceType;
     boolean restricted;
     int chromosomeCount;
     List<Metadata> additionalMetadata;
@@ -45,7 +45,7 @@ public class Genome extends CoGeObject {
         this.organism = organism;
     }
 
-    void setSequenceType(String sequenceType) {
+    void setSequenceType(SequenceType sequenceType) {
         this.sequenceType = sequenceType;
     }
 
@@ -63,6 +63,15 @@ public class Genome extends CoGeObject {
 
     void setExperiments(List<Integer> experiments) {
         this.experiments = experiments;
+    }
+
+    /**
+     * The venerable toString() method.
+     */
+    public String toString() {
+        return "id="+id+"; name="+name+"; description="+description +
+            "; version="+version+"; organism="+organism.name+"; sequenceType="+sequenceType.name +
+            "; restricted="+restricted+"; chromosomeCount="+chromosomeCount;
     }
 
 }

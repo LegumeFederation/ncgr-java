@@ -17,39 +17,32 @@ public class CoGeTester {
     public static void main(String[] args) {
 
         if (args.length!=1) {
-            System.err.println("Usage: CoGeTester <searchTerm>");
+            System.err.println("Usage: CoGeTester <featureTerm>");
             System.exit(1);
         }
 
-        String searchTerm = args[0];
+        String featureTerm = args[0];
         
-        CoGe coge = new CoGe("https://genomevolution.org/coge/api/v1/");
+        CoGe coge = new CoGe("https://genomevolution.org/coge/api/v1");
 
         try {
+
             System.out.println("");
-            System.out.println("Searching on:"+searchTerm);
-            System.out.println("");
-            List<Organism> organisms = coge.searchOrganism(searchTerm);
-            for (Organism o : organisms) {
-                System.out.println("id\t"+o.id);
-                System.out.println("name\t"+o.name);
-                System.out.println("description\t"+o.description);
-                for (Integer id : o.genomes) {
-                    try {
-                        Genome genome = coge.fetchGenome(id);
-                        System.out.println("genome\t"+genome.id+"\t"+genome.name+"\t"+genome.description);
-                    } catch (IOException ex) {
-                        String errorMessage = CoGe.getErrorMessage(ex);
-                        if (errorMessage.contains("Access denied")) {
-                            System.out.println("genome\t"+id+"\tAccess denied");
-                        } else {
-                            System.err.println(ex.toString());
-                        }
-                    }
-                }
+            System.out.println("Searching for feature with:"+featureTerm);
+            List<Feature> features = coge.searchFeature(featureTerm);
+            for (Feature f : features) {
+                Feature feature = coge.fetchFeature(f.id);
                 System.out.println("");
-                System.out.println("");
+                System.out.println("id:\t"+feature.id);
+                System.out.println("type:\t"+feature.type);
+                System.out.println("chr:\t"+feature.chromosome);
+                if (feature.genome!=null) System.out.println("genome:\t"+feature.genome.toString());
+                System.out.println("start:\t"+feature.start);
+                System.out.println("stop:\t"+feature.stop);
+                System.out.println("strand:\t"+feature.strand);
+                System.out.println("seq:\t"+feature.sequence);
             }
+            
         } catch (Exception ex) {
             System.err.println(ex.toString());
             System.exit(1);

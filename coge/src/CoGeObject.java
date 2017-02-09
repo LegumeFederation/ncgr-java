@@ -15,7 +15,28 @@ public class CoGeObject {
     String description;
 
     /**
-     * Construct given id, name and description.
+     * Default constructor. Does nothing, but allows child classes to create their own constructors.
+     */
+    protected CoGeObject() {
+    }
+
+    /**
+     * Minimal constructor, just id.
+     */
+    protected CoGeObject(int id) {
+        this.id = id;
+    }
+
+    /**
+     * Nearly minimal constructor, just id and name.
+     */
+    protected CoGeObject(int id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+
+    /**
+     * Standard constructor, id, name and description.
      */
     protected CoGeObject(int id, String name, String description) {
         this.id = id;
