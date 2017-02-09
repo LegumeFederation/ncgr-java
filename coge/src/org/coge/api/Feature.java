@@ -51,46 +51,55 @@ public class Feature {
         this.type = type;
     }
 
+    ////////// getters and setters //////////
 
-    /**
-     * Set the chromosome value.
-     */
-    public void setChromosome(String chromosome) {
+    public int getId() {
+        return id;
+    }
+
+    public String getType() {
+        return type;
+    }
+    
+    public String getChromosome() {
+        return chromosome;
+    }
+    void setChromosome(String chromosome) {
         this.chromosome = chromosome;
     }
 
-    /**
-     * Set the genome.
-     */
-    public void setGenome(Genome genome) {
+    public Genome getGenome() {
+        return genome;
+    }
+    void setGenome(Genome genome) {
         this.genome = genome;
     }
 
-    /**
-     * Set the start value.
-     */
-    public void setStart(int start) {
+    public int getStart() {
+        return start;
+    }
+    void setStart(int start) {
         this.start = start;
     }
 
-    /**
-     * Set the stop value.
-     */
-    public void setStop(int stop) {
+    public int getStop() {
+        return stop;
+    }
+    void setStop(int stop) {
         this.stop = stop;
     }
 
-    /**
-     * Set the strand value.
-     */
-    public void setStrand(int strand) {
+    public int getStrand() {
+        return strand;
+    }
+    void setStrand(int strand) {
         this.strand = strand;
     }
 
-    /**
-     * Set the sequence value.
-     */
-    public void setSequence(String sequence) {
+    public String getSequence() {
+        return sequence;
+    }
+    void setSequence(String sequence) {
         this.sequence = sequence;
     }
 

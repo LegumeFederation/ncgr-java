@@ -261,7 +261,6 @@ public class CoGe {
      *
      * @param id the feature id
      */
-    /* NOT WORKING
     public String fetchFeatureSequence(int id) throws IOException, JSONException {
         String url = baseUrl+"/features/"+id+"/sequence";
         JSONResource jr = resty.json(url);
@@ -271,12 +270,11 @@ public class CoGe {
         while ((i=stream.read())!=-1) buffer.append((char)i);
         String seq = buffer.toString();
         if (seq.contains("error")) {
-            return getErrorMessage(seq);
+            return getErrorMessage(new JSONObject(seq));
         } else {
             return seq;
         }
     }
-    */
 
     ////////// Experiment //////////
 

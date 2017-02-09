@@ -1,5 +1,4 @@
-import org.coge.api.CoGe;
-import org.coge.api.DataStoreList;
+import org.coge.api.*;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -19,12 +18,12 @@ public class CoGeTester {
     public static void main(String[] args) {
 
         if (args.length!=2) {
-            System.err.println("Usage: CoGeTester <token> <datastorePath>");
+            System.err.println("Usage: CoGeTester <token> <featureTerm>");
             System.exit(1);
         }
 
         String token = args[0];
-        String datastorePath = args[1];
+        String featureTerm = args[1];
 
         // Successfully created client CoGe Java API
         // key: Go5PXacQcprIA5vFADpkVsDqyAka 
@@ -48,25 +47,32 @@ public class CoGeTester {
         try {
 
             System.out.println("");
-            System.out.println("Searching for data store path: "+datastorePath);
+            System.out.println("Searching for feature: "+featureTerm);
             System.out.println("");
-            DataStoreList dsl = coge.listDataStore(datastorePath);
-            if (dsl!=null) {
-                if (dsl.getPath()!=null) {
-                    System.out.println("path:"+dsl.getPath());
-                    System.out.println("");
-                }
-                if (dsl.getItems()!=null) {
-                    for (Map<String,String> item : dsl.getItems()) {
-                        for (String key : item.keySet()) {
-                            System.out.println(key+":"+item.get(key));
-                        }
-                        System.out.println("");
-                    }
-                } else {
-                    System.out.println("DataStoreList is not null but items IS null!");
-                }
-            }
+            List<Feature> features = coge.searchFeature(featureTerm);
+            
+            // int id;
+            // String type;
+            
+            // String chromosome;
+            // Genome genome;
+            // int start;
+            // int stop;
+            // int strand;
+            // String sequence;
+
+            for (Feature feature : features) {
+                System.out.println("id:\t"+feature.getId());
+                System.out.println("type:\t"+feature.getType());
+                System.out.println("chr:\t"+feature.getChromosome());
+                System.out.println("genome:\t"+feature.getGenome().toString());
+                System.out.println("start:\t"+feature.getStart());
+                System.out.println("stop:\t"+feature.getStop());
+                System.out.println("strand:\t"+feature.getStrand());
+                System.out.println("sequence:");
+                System.out.println(coge.fetchFeatureSequence(feature.getId()));
+                System.out.println("");
+            }                
             
         } catch (Exception ex) {
             System.err.println(ex.toString());
