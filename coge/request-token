@@ -1,0 +1,7 @@
+# request a token from the Agave iPlant API
+
+CLIENT=R281UFhhY1FjcHJJQTV2RkFEcGtWc0RxeUFrYTpYSXF4S2tpeUh2b2JLM1Q1TDN6X25GQ05LMTBh
+
+curl -k -d "grant_type=client_credentials" -H "Authorization: Basic $CLIENT, Content-Type: application/x-www-form-urlencoded" https://agave.iplantc.org/token
+
+echo ""

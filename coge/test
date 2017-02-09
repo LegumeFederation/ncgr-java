@@ -1,1 +1,1 @@
-java -cp classes:lib/resty.jar org.ncgr.coge.CoGeTester $1
+java -cp classes:lib/resty.jar org.ncgr.coge.CoGeTester "$1"

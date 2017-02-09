@@ -1,7 +1,6 @@
 package org.ncgr.coge;
 
 import java.util.List;
-import java.util.ArrayList;
 
 /**
  * Encapsulate an Organism record.

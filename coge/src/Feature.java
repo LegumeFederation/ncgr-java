@@ -1,7 +1,6 @@
 package org.ncgr.coge;
 
 import java.util.List;
-import java.util.ArrayList;
 
 /**
  * Encapsulate a Feature record. Doesn't extend CoGeObject since it doesn't contain name and description.

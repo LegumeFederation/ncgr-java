@@ -6,6 +6,8 @@ import java.io.InputStream;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.LinkedHashMap;
 
 import us.monoid.json.JSONArray;
 import us.monoid.json.JSONException;
@@ -21,13 +23,27 @@ import us.monoid.web.JSONResource;
 public class CoGe {
 
     String baseUrl;
+    String username;
+    String token;
     Resty resty;
 
     /**
-     * Construct given a base URL, like https://genomevolution.org/coge/api/v1/
+     * Construct given just a base URL, like https://genomevolution.org/coge/api/v1/
+     * Used only for calls that don't require authentication.
      */
     public CoGe(String baseUrl) {
         this.baseUrl = baseUrl;
+        this.resty = new Resty();
+    }
+
+    /**
+     * Construct given a base URL, username and token, used like https://genomevolution.org/coge/api/v1/stuff/here/and/here?username=x&token=y
+     * Used for calls that require authentication.
+     */
+    public CoGe(String baseUrl, String username, String token) {
+        this.baseUrl = baseUrl;
+        this.username = username;
+        this.token = token;
         this.resty = new Resty();
     }
 
@@ -262,6 +278,219 @@ public class CoGe {
     }
     */
 
+    ////////// Experiment //////////
+
+    /**
+     * Experiment search
+     * GET [base_url/experiments/search/term]
+     *
+     * @param searchTerm a text string to search on
+     */
+    public List<Experiment> searchExperiment(String searchTerm) throws IOException, JSONException {
+        List<Experiment> experiments = new ArrayList<Experiment>();
+        for (CoGeObject object : search("experiments", searchTerm)) {
+            experiments.add(new Experiment(object));
+        }
+        return experiments;
+    }
+
+    /**
+     * Experiment fetch - used to populate the genomes
+     * GET [base_url/experiments/id]
+     * 
+     * @param id the experiment id
+     */
+    public Experiment fetchExperiment(int id) throws IOException, JSONException {
+        JSONObject json = fetch("experiments", id);
+        return getExperimentFromJSON(json);
+    }
+
+    /**
+     * Populate an Experiment from a JSONObject.
+     */
+    Experiment getExperimentFromJSON(JSONObject json) throws IOException, JSONException {
+        int id = json.getInt("id");
+        String name = json.getString("name");
+        String description = json.getString("description");
+        Experiment experiment = new Experiment(id, name, description);
+        if (json.has("version")) experiment.setVersion(json.getString("version"));
+        if (json.has("genome_id")) experiment.setGenomeId(json.getInt("genome_id"));
+        if (json.has("source")) experiment.setSource(json.getString("source"));
+        if (json.has("types")) {
+            Map<String,String> types = new LinkedHashMap<String,String>();
+            JSONArray typarray = json.getJSONArray("types");
+            for (int i=0; i<typarray.length(); i++) {
+                JSONObject type = typarray.getJSONObject(i);
+                types.put(type.getString("name"), type.getString("description"));
+            }
+            experiment.setTypes(types);
+        }
+        if (json.has("restricted")) experiment.setRestricted(json.getBoolean("restricted"));
+        if (json.has("additional_metadata")) {
+            List<Metadata> metadata = new ArrayList<Metadata>();
+            JSONArray metarray = json.getJSONArray("additional_metadata");
+            for (int i=0; i<metarray.length(); i++) {
+                JSONObject meta = metarray.getJSONObject(i);
+                metadata.add(new Metadata(meta.getString("type_group"), meta.getString("type"), meta.getString("text"), meta.getString("link")));
+            }
+            experiment.setAdditionalMetadata(metadata);
+        }
+        return experiment;
+    }
+
+    ////////// Notebook //////////
+
+    /**
+     * Notebook search
+     * GET [base_url/notebooks/search/term]
+     *
+     * @param searchTerm a text string to search on
+     */
+    public List<Notebook> searchNotebook(String searchTerm) throws IOException, JSONException {
+        List<Notebook> notebooks = new ArrayList<Notebook>();
+        for (CoGeObject object : search("notebooks", searchTerm)) {
+            notebooks.add(new Notebook(object));
+        }
+        return notebooks;
+    }
+
+    /**
+     * Notebook fetch - used to populate the genomes
+     * GET [base_url/notebooks/id]
+     * 
+     * @param id the notebook id
+     */
+    public Notebook fetchNotebook(int id) throws IOException, JSONException {
+        JSONObject json = fetch("notebooks", id);
+        return getNotebookFromJSON(json);
+    }
+
+    /**
+     * Populate an Notebook from a JSONObject.
+     */
+    Notebook getNotebookFromJSON(JSONObject json) throws IOException, JSONException {
+        int id = json.getInt("id");
+        String name = json.getString("name");
+        String description = json.getString("description");
+        Notebook notebook = new Notebook(id, name, description);
+        if (json.has("type")) notebook.setType(json.getString("type"));
+        if (json.has("restricted")) notebook.setRestricted(json.getBoolean("restricted"));
+        if (json.has("additional_metadata")) {
+            List<Metadata> metadata = new ArrayList<Metadata>();
+            JSONArray metarray = json.getJSONArray("additional_metadata");
+            for (int i=0; i<metarray.length(); i++) {
+                JSONObject meta = metarray.getJSONObject(i);
+                metadata.add(new Metadata(meta.getString("type_group"), meta.getString("type"), meta.getString("text"), meta.getString("link")));
+            }
+            notebook.setAdditionalMetadata(metadata);
+        }
+        if (json.has("items")) {
+            List<Item> items = new ArrayList<Item>();
+            JSONArray itemarray = json.getJSONArray("items");
+            for (int i=0; i<itemarray.length(); i++) {
+                JSONObject item = itemarray.getJSONObject(i);
+                items.add(new Item(item.getInt("id"), item.getString("type")));
+            }
+            notebook.setItems(items);
+        }
+        return notebook;
+    }
+
+    ////////// Group //////////
+
+    /**
+     * Group search
+     * GET [base_url/groups/search/term]
+     *
+     * @param searchTerm a text string to search on
+     */
+    public List<Group> searchGroup(String searchTerm) throws IOException, JSONException {
+        List<Group> groups = new ArrayList<Group>();
+        String url = baseUrl+"/groups/search/"+searchTerm.replaceAll(" ","%20"); // should use a special-purpose method for this
+        List<Group> objects = new ArrayList<Group>();
+        JSONResource jr  = resty.json(url);
+        JSONObject jo = jr.object();
+        Iterator<String> joit = jo.keys();
+        while (joit.hasNext()) {
+            String jkey = joit.next();
+            if (jkey.equals("groups")) {
+                JSONArray ja = jo.getJSONArray(jkey);
+                for (int i=0; i<ja.length(); i++) {
+                    JSONObject jjo = ja.getJSONObject(i);
+                    int id = jjo.getInt("id"); // all returned objects should have an id
+                    String name = jjo.getString("name");
+                    String description = jjo.getString("description");
+                    String role = jjo.getString("role");
+                    groups.add(new Group(id, name, description, role));
+                }
+            }
+        }
+        return groups;
+    }
+
+    /**
+     * Group fetch - used to populate the genomes
+     * GET [base_url/groups/id]
+     * 
+     * @param id the group id
+     */
+    public Group fetchGroup(int id) throws IOException, JSONException {
+        JSONObject json = fetch("groups", id);
+        return getGroupFromJSON(json);
+    }
+
+    /**
+     * Populate an Group from a JSONObject.
+     */
+    Group getGroupFromJSON(JSONObject json) throws IOException, JSONException {
+        int id = json.getInt("id");
+        String name = json.getString("name");
+        String description = json.getString("description");
+        String role = json.getString("role");
+        Group group = new Group(id, name, description, role);
+        if (json.has("users")) {
+            List<Integer> users = new ArrayList<Integer>();
+            JSONArray usearray = json.getJSONArray("users");
+            for (int i=0; i<usearray.length(); i++) {
+                int user = usearray.getInt(i);
+                users.add(user);
+            }
+            group.setUsers(users);
+        }
+        return group;
+    }
+
+    ////////// DataStoreList //////////
+
+    /**
+     * Get a list from the data store corresponding to the given path.
+     * GET [base_url/irods/list/path]
+     *
+     */
+    public DataStoreList listDataStore(String path) throws Exception {
+        if (username==null || token==null) throw new Exception("Error: username and/or token not supplied. Data Store requests require authentication.");
+        String url = baseUrl+"/irods/list/"+path+"?username="+username+"&token="+token;
+        JSONResource jr = resty.json(url);
+        JSONObject jo = jr.object();
+        DataStoreList dsl = new DataStoreList();
+        if (jo.has("error")) throw new Exception(getErrorMessage(jo));
+        if (jo.has("path")) dsl.setPath(jo.getString("path"));
+        if (jo.has("items")) {
+            JSONArray ja = jo.getJSONArray("items");
+            for (int i=0; i<ja.length(); i++) {
+                JSONObject json = ja.getJSONObject(i);
+                Map<String,String> item = new LinkedHashMap<String,String>();
+                Iterator<String> keys = json.keys();
+                while (keys.hasNext()) {
+                    String key = keys.next();
+                    item.put(key, json.getString(key));
+                }
+                dsl.addItem(item);
+            }
+        }
+        return dsl;
+    }
+
     ////////// Generic //////////
 
     /**
@@ -323,15 +552,14 @@ public class CoGe {
     }
 
     /**
-     * Return a nicely readable error message from an error JSON string.
+     * Return a nicely readable error message from an JSONObject containing "error".
      */
-    static String getErrorMessage(String str) throws JSONException {
-        JSONObject json = new JSONObject(str);
+    static String getErrorMessage(JSONObject json) throws JSONException {
         JSONObject error = json.getJSONObject("error");
         Iterator<String> keys = error.keys();
         String errorType = keys.next();
         String errorReason = error.getString(errorType);
-        return errorType+":"+errorReason;
+        return errorType+": "+errorReason;
     }
 
     
