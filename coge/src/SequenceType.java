@@ -1,4 +1,4 @@
-package org.ncgr.coge;
+package org.coge.api;
 
 /**
  * Encapsulate a sequence type. Doesn't extend CoGeObject since does not have an id.

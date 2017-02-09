@@ -1,4 +1,4 @@
-package org.ncgr.coge;
+package org.coge.api;
 
 /**
  * Holds a piece of generic metadata associated with many objects.

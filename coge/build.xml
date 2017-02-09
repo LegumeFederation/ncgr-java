@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="ncgr-coge" default="classes" basedir=".">
+<project name="coge-api" default="classes" basedir=".">
 
   <target name="init">
     <tstamp/>
 
     <property name="resty" value="lib/resty.jar"/>
-    <property name="jar" value="ncgr-coge.jar"/>
+    <property name="jar" value="coge-api.jar"/>
 
   </target>
 

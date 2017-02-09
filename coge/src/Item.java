@@ -1,4 +1,4 @@
-package org.ncgr.coge;
+package org.coge.api;
 
 /**
  * Encapsulate an item.

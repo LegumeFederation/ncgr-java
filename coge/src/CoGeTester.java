@@ -1,4 +1,5 @@
-package org.ncgr.coge;
+import org.coge.api.CoGe;
+import org.coge.api.DataStoreList;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -14,15 +15,16 @@ import us.monoid.web.JSONResource;
  * Test the CoGe class.
  */
 public class CoGeTester {
-
+    
     public static void main(String[] args) {
 
-        if (args.length!=1) {
-            System.err.println("Usage: CoGeTester <datastorePath>");
+        if (args.length!=2) {
+            System.err.println("Usage: CoGeTester <token> <datastorePath>");
             System.exit(1);
         }
 
-        String datastorePath = args[0];
+        String token = args[0];
+        String datastorePath = args[1];
 
         // Successfully created client CoGe Java API
         // key: Go5PXacQcprIA5vFADpkVsDqyAka 
@@ -41,7 +43,7 @@ public class CoGeTester {
         // {"scope":"am_application_scope default","token_type":"bearer","expires_in":14017,"access_token":"ed69edabfa3887e5cfdb9fb9bd5e59a"}
 
         
-        CoGe coge = new CoGe("https://genomevolution.org/coge/api/v1", "shokin", "ed69edabfa3887e5cfdb9fb9bd5e59a");
+        CoGe coge = new CoGe("https://genomevolution.org/coge/api/v1", "shokin", token);
 
         try {
 
@@ -50,12 +52,12 @@ public class CoGeTester {
             System.out.println("");
             DataStoreList dsl = coge.listDataStore(datastorePath);
             if (dsl!=null) {
-                if (dsl.path!=null) {
-                    System.out.println("path:"+dsl.path);
+                if (dsl.getPath()!=null) {
+                    System.out.println("path:"+dsl.getPath());
                     System.out.println("");
                 }
-                if (dsl.items!=null) {
-                    for (Map<String,String> item : dsl.items) {
+                if (dsl.getItems()!=null) {
+                    for (Map<String,String> item : dsl.getItems()) {
                         for (String key : item.keySet()) {
                             System.out.println(key+":"+item.get(key));
                         }

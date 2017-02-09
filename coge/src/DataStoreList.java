@@ -1,4 +1,4 @@
-package org.ncgr.coge;
+package org.coge.api;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -21,13 +21,20 @@ public class DataStoreList {
         items = new ArrayList<Map<String,String>>();
     }
 
+    public List<Map<String,String>> getItems() {
+        return items;
+    }
     void addItem(Map<String,String> item) {
         items.add(item);
     }
 
+    public String getPath() {
+        return path;
+    }
     void setPath(String path) {
         this.path = path;
     }
+    
 
     // "items":[
     //          {"name":"cicar.CDCFrontier.gnm1/","order":1,"path":"/iplant/home/shared/Legume_Federation/Cicer_arietinum/cicar.CDCFrontier.gnm1","type":"directory"},
