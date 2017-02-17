@@ -3,11 +3,9 @@
 
   <target name="init">
     <tstamp/>
- 
-    <property name="jar" value="coge-api.jar"/>
-
-    <property name="resty" value="lib/resty.jar"/>
-
+    <property name="jar"                 value="coge-api.jar"/>
+    <property name="coge-api"            value="../../coge/classes"/>
+    <property name="resty"               value="lib/resty.jar"/>
     <property name="jargon-user-tagging" value="lib/jargon-user-tagging.jar"/>
     <property name="jargon-user-profile" value="lib/jargon-user-profile.jar"/>
     <property name="jargon-ticket"       value="lib/jargon-ticket.jar"/>
@@ -15,11 +13,9 @@
     <property name="jargon-httpstream"   value="lib/jargon-httpstream.jar"/>
     <property name="jargon-data-utils"   value="lib/jargon-data-utils.jar"/>
     <property name="jargon-core"         value="lib/jargon-core.jar"/>
-
     <!-- these aren't needed for compilation, but listed here as a reminder -->
     <property name="slf4j-api"           value="lib/slf4j-api.jar"/>
     <property name="slf4j-nop"           value="lib/slf4j-nop.jar"/>
-    
   </target>
 
   <target name="about">
@@ -30,7 +26,7 @@
   
   <target name="classes" depends="init">
     <javac srcdir="src"
-	   classpath="classes:${resty}:${jargon-core}"
+	   classpath="classes:${coge-api}:${resty}:${jargon-core}"
            deprecation="on"	
            includeantruntime="false"
 	   destdir="classes">
@@ -44,7 +40,7 @@
 
   <target name="javadoc" depends="classes">
     <javadoc destdir="javadoc"
-	     classpath="classes:${resty}:${jargon-core}">
+	     classpath="classes:${coge-api}:${resty}:${jargon-core}">
       <fileset dir="src" />
     </javadoc>
   </target>
@@ -52,6 +48,8 @@
   <target name="clean">
     <delete dir="classes"/>
     <mkdir dir="classes"/>
+    <delete dir="javadoc"/>
+    <mkdir dir="javadoc"/>
   </target>
 
   <target name="commit" depends="jar,javadoc">
