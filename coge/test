@@ -1,1 +1,0 @@
-java -cp classes:lib/resty.jar CoGeTester 7483c58423488752b4cc9a8968f559 $1

@@ -15,15 +15,17 @@ import us.monoid.web.JSONResource;
  */
 public class CoGeTester {
     
+    static String BASE_URL = "https://genomevolution.org/coge/api/v1";
+        
     public static void main(String[] args) {
 
         if (args.length!=2) {
-            System.err.println("Usage: CoGeTester <token> <featureTerm>");
+            System.err.println("Usage: CoGeTester <user> <token>");
             System.exit(1);
         }
 
-        String token = args[0];
-        String featureTerm = args[1];
+        String user = args[0];
+        String token = args[1];
 
         // Successfully created client CoGe Java API
         // key: Go5PXacQcprIA5vFADpkVsDqyAka 
@@ -31,48 +33,33 @@ public class CoGeTester {
 
         // need something like this to get token!
         //
+        // CLIENT=R281UFhhY1FjcHJJQTV2RkFEcGtWc0RxeUFrYTpYSXF4S2tpeUh2b2JLM1Q1TDN6X25GQ05LMTBh
+        //
         // -k insecure
         // -d data
         // -H extra header
         //
-        // CLIENT=R281UFhhY1FjcHJJQTV2RkFEcGtWc0RxeUFrYTpYSXF4S2tpeUh2b2JLM1Q1TDN6X25GQ05LMTBh
-        //
         // curl -k -d "grant_type=client_credentials" -H "Authorization: Basic $CLIENT, Content-Type: application/x-www-form-urlencoded" https://agave.iplantc.org/token
         //
+        // Returns:
+        //
         // {"scope":"am_application_scope default","token_type":"bearer","expires_in":14017,"access_token":"ed69edabfa3887e5cfdb9fb9bd5e59a"}
-
         
-        CoGe coge = new CoGe("https://genomevolution.org/coge/api/v1", "shokin", token);
+        CoGe coge = new CoGe(BASE_URL, user, token);
 
         try {
 
-            System.out.println("");
-            System.out.println("Searching for feature: "+featureTerm);
-            System.out.println("");
-            List<Feature> features = coge.searchFeature(featureTerm);
+            String name = "Bos taurus";
+            String description = "cellular organisms; Eukaryota; Opisthokonta; Metazoa; Eumetazoa; Bilateria; Deuterostomia; Chordata; Craniata; Vertebrata; Gnathostomata; Teleostomi; Euteleostomi; Sarcopterygii; Dipnotetrapodomorpha; Tetrapoda; Amniota; Mammalia; Theria; Eutheria; Boreoeutheria; Laurasiatheria; Cetartiodactyla; Ruminantia; Pecora; Bovidae; Bovinae; Bos";
             
-            // int id;
-            // String type;
+            System.out.println("Attempting to add organism:\t"+name);
+            System.out.println("\t\tDescription:\t"+description);
+            System.out.println("");
             
-            // String chromosome;
-            // Genome genome;
-            // int start;
-            // int stop;
-            // int strand;
-            // String sequence;
+            CoGeResponse response = coge.addOrganism(name, description);
 
-            for (Feature feature : features) {
-                System.out.println("id:\t"+feature.getId());
-                System.out.println("type:\t"+feature.getType());
-                System.out.println("chr:\t"+feature.getChromosome());
-                System.out.println("genome:\t"+feature.getGenome().toString());
-                System.out.println("start:\t"+feature.getStart());
-                System.out.println("stop:\t"+feature.getStop());
-                System.out.println("strand:\t"+feature.getStrand());
-                System.out.println("sequence:");
-                System.out.println(coge.fetchFeatureSequence(feature.getId()));
-                System.out.println("");
-            }                
+            System.out.println("success="+response.getSuccess());
+            System.out.println("id="+response.getId());
             
         } catch (Exception ex) {
             System.err.println(ex.toString());

@@ -12,6 +12,7 @@ import java.util.LinkedHashMap;
 import us.monoid.json.JSONArray;
 import us.monoid.json.JSONException;
 import us.monoid.json.JSONObject;
+import us.monoid.web.Content;
 import us.monoid.web.Resty;
 import us.monoid.web.JSONResource;
 
@@ -34,6 +35,7 @@ public class CoGe {
     public CoGe(String baseUrl) {
         this.baseUrl = baseUrl;
         this.resty = new Resty();
+        this.resty.identifyAsResty(); // why not?
     }
 
     /**
@@ -91,6 +93,26 @@ public class CoGe {
             organism.setGenomes(genomes);
         }
         return organism;
+    }
+
+    /**
+     * Add a new organism. The response will contain the organism id if successful.
+     */
+    public CoGeResponse addOrganism(String name, String description) throws IOException, JSONException {
+        if (username==null || token==null) throw new JSONException("Error: username and/or token not supplied. Data Store requests require authentication.");
+        String url = baseUrl+"/organisms?username="+username+"&token="+token;
+        JSONObject json = new JSONObject();
+        json.put("name", name);
+        json.put("description", description);
+        Content content = resty.content(json);
+        JSONObject response = resty.json(url, content).object();
+        // DEBUG
+        System.err.println(url);
+        System.err.println(json.toString());
+        System.err.println(response.toString());
+        //
+        if (response.has("error")) throw new JSONException(getErrorMessage(response));
+        return new CoGeResponse(response);
     }
 
     ////////// Genome //////////
@@ -465,13 +487,13 @@ public class CoGe {
      * GET [base_url/irods/list/path]
      *
      */
-    public DataStoreList listDataStore(String path) throws Exception {
-        if (username==null || token==null) throw new Exception("Error: username and/or token not supplied. Data Store requests require authentication.");
+    public DataStoreList listDataStore(String path) throws IOException, JSONException {
+        if (username==null || token==null) throw new JSONException("Error: username and/or token not supplied. Data Store requests require authentication.");
         String url = baseUrl+"/irods/list/"+path+"?username="+username+"&token="+token;
         JSONResource jr = resty.json(url);
         JSONObject jo = jr.object();
         DataStoreList dsl = new DataStoreList();
-        if (jo.has("error")) throw new Exception(getErrorMessage(jo));
+        if (jo.has("error")) throw new JSONException(getErrorMessage(jo));
         if (jo.has("path")) dsl.setPath(jo.getString("path"));
         if (jo.has("items")) {
             JSONArray ja = jo.getJSONArray("items");
