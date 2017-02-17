@@ -98,8 +98,8 @@ public class CoGe {
     /**
      * Add a new organism. The response will contain the organism id if successful.
      */
-    public CoGeResponse addOrganism(String name, String description) throws IOException, JSONException {
-        if (username==null || token==null) throw new JSONException("Error: username and/or token not supplied. Data Store requests require authentication.");
+    public CoGeResponse addOrganism(String name, String description) throws CoGeException, IOException, JSONException {
+        if (username==null || token==null) throw CoGeException.missingAuthException();
         String url = baseUrl+"/organisms?username="+username+"&token="+token;
         JSONObject json = new JSONObject();
         json.put("name", name);
@@ -107,11 +107,11 @@ public class CoGe {
         Content content = resty.content(json);
         JSONObject response = resty.json(url, content).object();
         // DEBUG
-        System.err.println(url);
-        System.err.println(json.toString());
-        System.err.println(response.toString());
+        // System.err.println(url);
+        // System.err.println(json.toString());
+        // System.err.println(response.toString());
         //
-        if (response.has("error")) throw new JSONException(getErrorMessage(response));
+        if (isError(response)) throw new CoGeException(response);
         return new CoGeResponse(response);
     }
 
@@ -292,7 +292,7 @@ public class CoGe {
         while ((i=stream.read())!=-1) buffer.append((char)i);
         String seq = buffer.toString();
         if (seq.contains("error")) {
-            return getErrorMessage(new JSONObject(seq));
+            return CoGeException.getErrorMessage(new JSONObject(seq));
         } else {
             return seq;
         }
@@ -487,13 +487,13 @@ public class CoGe {
      * GET [base_url/irods/list/path]
      *
      */
-    public DataStoreList listDataStore(String path) throws IOException, JSONException {
-        if (username==null || token==null) throw new JSONException("Error: username and/or token not supplied. Data Store requests require authentication.");
+    public DataStoreList listDataStore(String path) throws CoGeException, IOException, JSONException {
+        if (username==null || token==null) throw CoGeException.missingAuthException();
         String url = baseUrl+"/irods/list/"+path+"?username="+username+"&token="+token;
         JSONResource jr = resty.json(url);
         JSONObject jo = jr.object();
         DataStoreList dsl = new DataStoreList();
-        if (jo.has("error")) throw new JSONException(getErrorMessage(jo));
+        if (isError(jo)) throw new CoGeException(jo);
         if (jo.has("path")) dsl.setPath(jo.getString("path"));
         if (jo.has("items")) {
             JSONArray ja = jo.getJSONArray("items");
@@ -559,28 +559,10 @@ public class CoGe {
     }
 
     /**
-     * Return a nicely readable error message from an IOException containing the error JSON.
+     * Return true if the JSONObject is a CoGe error message.
      */
-    static String getErrorMessage(IOException ex) throws JSONException {
-        String[] parts = ex.getMessage().split("\n");
-        JSONObject json = new JSONObject(parts[1]);
-        JSONObject error = json.getJSONObject("error");
-        Iterator<String> keys = error.keys();
-        String errorType = keys.next();
-        String errorReason = error.getString(errorType);
-        return errorType+":"+errorReason;
+    boolean isError(JSONObject json) {
+        return json.has("error");
     }
-
-    /**
-     * Return a nicely readable error message from an JSONObject containing "error".
-     */
-    static String getErrorMessage(JSONObject json) throws JSONException {
-        JSONObject error = json.getJSONObject("error");
-        Iterator<String> keys = error.keys();
-        String errorType = keys.next();
-        String errorReason = error.getString(errorType);
-        return errorType+": "+errorReason;
-    }
-
     
 }

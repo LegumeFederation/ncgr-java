@@ -62,8 +62,10 @@ public class CoGeTester {
             System.out.println("id="+response.getId());
             
         } catch (Exception ex) {
+
             System.err.println(ex.toString());
             System.exit(1);
+
         }
 
     }
