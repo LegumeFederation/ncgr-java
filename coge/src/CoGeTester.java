@@ -15,7 +15,8 @@ import us.monoid.web.JSONResource;
  */
 public class CoGeTester {
     
-    static String BASE_URL = "https://genomevolution.org/coge/api/v1";
+    // static String BASE_URL = "https://genomevolution.org/coge/api/v1";
+    static String BASE_URL = "https://geco.iplantcollaborative.org/coge-qa/coge/api/v1/";
         
     public static void main(String[] args) {
 
@@ -49,8 +50,9 @@ public class CoGeTester {
 
         try {
 
-            String name = "Bos taurus";
-            String description = "cellular organisms; Eukaryota; Opisthokonta; Metazoa; Eumetazoa; Bilateria; Deuterostomia; Chordata; Craniata; Vertebrata; Gnathostomata; Teleostomi; Euteleostomi; Sarcopterygii; Dipnotetrapodomorpha; Tetrapoda; Amniota; Mammalia; Theria; Eutheria; Boreoeutheria; Laurasiatheria; Cetartiodactyla; Ruminantia; Pecora; Bovidae; Bovinae; Bos";
+            String name = "Taxidea taxus";
+            
+            String description = "cellular organisms; Eukaryota; Opisthokonta; Metazoa; Eumetazoa; Bilateria; Deuterostomia; Chordata; Craniata; Vertebrata; Gnathostomata; Teleostomi; Euteleostomi; Sarcopterygii; Dipnotetrapodomorpha; Tetrapoda; Amniota; Mammalia; Theria; Eutheria; Boreoeutheria; Laurasiatheria; Carnivora; Caniformia; Mustelidae; Taxidiinae; Taxidea";
             
             System.out.println("Attempting to add organism:\t"+name);
             System.out.println("\t\tDescription:\t"+description);
@@ -58,8 +60,7 @@ public class CoGeTester {
             
             CoGeResponse response = coge.addOrganism(name, description);
 
-            System.out.println("success="+response.getSuccess());
-            System.out.println("id="+response.getId());
+            System.out.println(response.toString());
             
         } catch (Exception ex) {
 
