@@ -1,4 +1,4 @@
-import org.ncgr.coge.CoGeParameters;
+import org.coge.api.CoGeParameters;
 import org.ncgr.coge.IRODSParameters;
 
 import java.io.File;

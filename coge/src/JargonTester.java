@@ -37,9 +37,7 @@ public class JargonTester {
 
         try {
             
-            Properties props = new Properties();
-            props.load(new FileInputStream(PROPERTIES_FILE));
-            IRODSParameters params = new IRODSParameters(props);
+            IRODSParameters params = new IRODSParameters(PROPERTIES_FILE);
             
             irodsFileSystem = IRODSFileSystem.instance();
             System.out.println("IRODSFileSystem instantiated.");
@@ -61,7 +59,17 @@ public class JargonTester {
                 String fileType = null;
                 if (files[i].isFile()) fileType = "file";
                 if (files[i].isDirectory()) fileType = "directory";
-                System.out.println("\t"+fileType+"\t"+files[i].getName());
+                // discern directory purpose from LIS standard directory names
+                boolean isGenomeDir = files[i].isDirectory() && files[i].getName().endsWith("gnm1");
+                boolean isAnnotationDir = files[i].isDirectory() && files[i].getName().endsWith("ann1");
+                boolean isDiversityDir = files[i].isDirectory() && files[i].getName().endsWith("div1");
+                boolean isSyntenyDir = files[i].isDirectory() && files[i].getName().endsWith("synt1");
+                System.out.print("\t"+fileType+"\t"+files[i].getName()); 
+                if (isGenomeDir) System.out.print("\tGENOME DIRECTORY");
+                if (isAnnotationDir) System.out.print("\tANNOTATION DIRECTORY");
+                if (isDiversityDir) System.out.print("\tDIVERSITY DIRECTORY");
+                if (isSyntenyDir) System.out.print("\tSYNTENY DIRECTORY");
+                System.out.println("");
                 // drill deeper
                 if (files[i].isDirectory()) {
                     IRODSFile subFile = irodsFileFactory.instanceIRODSFile(directory+"/"+files[i].getName());
@@ -70,19 +78,61 @@ public class JargonTester {
                         String subFileType = null;
                         if (subFiles[j].isFile()) subFileType = "file";
                         if (subFiles[j].isDirectory()) subFileType = "directory";
+
+                        // discern file purpose from suffix
+                        boolean isFasta = subFiles[j].isFile() && subFiles[j].getName().endsWith("fa.gz");
+                        boolean isHardMaskedFasta = subFiles[j].isFile() && subFiles[j].getName().endsWith("hardmasked.fa.gz");
+                        boolean isSoftMaskedFasta = subFiles[j].isFile() && subFiles[j].getName().endsWith("softmasked.fa.gz");
+                        boolean isPlainFasta = isFasta && !isHardMaskedFasta && !isSoftMaskedFasta;
+                        
+                        boolean isCDSFasta = isFasta && subFiles[j].getName().endsWith("cds.fa.gz");
+                        boolean isCDSPrimaryTranscriptOnlyFasta = isFasta && subFiles[j].getName().endsWith("cds_primaryTranscriptOnly.fa.gz");
+                        
+                        boolean isProteinFasta = isFasta && subFiles[j].getName().endsWith("protein.fa.gz");
+                        boolean isProteinPrimaryTranscriptOnlyFasta = isFasta && subFiles[j].getName().endsWith("protein_primaryTranscriptOnly.fa.gz");
+
+                        boolean isTranscriptFasta = isFasta && subFiles[j].getName().endsWith("transcript.fa.gz");
+                        boolean isTranscriptPrimaryTranscriptOnlyFasta = isFasta && subFiles[j].getName().endsWith("transcript_primaryTranscriptOnly.fa.gz");
+
+                        boolean isGFF = subFiles[j].isFile() && subFiles[j].getName().endsWith("gff3.gz");
+                        boolean isGeneGFF = subFiles[j].isFile() && subFiles[j].getName().endsWith("gene.gff3.gz");
+                        boolean isGeneExonsGFF = isGFF && subFiles[j].getName().endsWith("gene_exons.gff3.gz");
+                        
+                        boolean isReadme = subFiles[j].isFile() && subFiles[j].getName().startsWith("README");
+
+                        // output
                         System.out.print("\t\t"+subFileType+"\t\t"+subFiles[j].getName());
-                        if (subFiles[j].getName().startsWith("README")) {
+                        
+                        if (isFasta) System.out.print("\tFASTA");
+                        if (isHardMaskedFasta) System.out.print("\tHARDMASKED");
+                        if (isSoftMaskedFasta) System.out.print("\tSOFTMASKED");
+                        
+                        if (isCDSFasta) System.out.print("\tCDS");
+                        if (isCDSPrimaryTranscriptOnlyFasta) System.out.print("\tCDS Primary Transcripts Only");
+                        
+                        if (isProteinFasta) System.out.print("\tPROTEIN");
+                        if (isProteinPrimaryTranscriptOnlyFasta) System.out.print("\tPROTEIN Primary Transcripts Only");
+
+                        if (isTranscriptFasta) System.out.print("\tTRANSCRIPTS");
+                        if (isTranscriptPrimaryTranscriptOnlyFasta) System.out.print("\tTRANSCRIPTS Primary Transcripts Only");
+
+                        if (isGFF) System.out.print("\tGFF");
+                        if (isGeneGFF) System.out.print("\tGENES");
+                        if (isGeneExonsGFF) System.out.print("\tGENES+EXONS");
+
+                        if (isReadme) {
+                            System.out.print("\tREADME");
                             IRODSFile sourceFile = irodsFileFactory.instanceIRODSFile(directory+"/"+files[i].getName()+"/"+subFiles[j].getName());
                             File localFile = new File(subFiles[j].getName());
                             try {
                                 dataTransferOperations.getOperation(sourceFile, localFile, null, null);
-                                System.out.println("\tCOPIED TO LOCAL DIRECTORY.");
+                                System.out.print("\tCOPIED TO LOCAL DIRECTORY.");
                             } catch (OverwriteException oe) {
-                                System.out.println("\tFILE ALREADY IN LOCAL DIRECTORY.");
+                                System.out.print("\tFILE ALREADY IN LOCAL DIRECTORY.");
                             }
-                        } else {
-                            System.out.println("");
                         }
+                        
+                        System.out.println("");
                     }
                 }
             }

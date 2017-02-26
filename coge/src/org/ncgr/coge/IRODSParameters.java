@@ -8,7 +8,6 @@ import java.util.Properties;
 /**
  * Encapsulate the auth and other CoGe parameters in this object, which can be loaded from a properties file.
  */
-
 public class IRODSParameters {
 
     String host;
