@@ -39,9 +39,7 @@ public class IRODSToCoGe {
 
         try {
             
-            Properties iRODSProps = new Properties();
-            iRODSProps.load(new FileInputStream(IRODS_PROPERTIES_FILE));
-            IRODSParameters iRODSParams = new IRODSParameters(iRODSProps);
+            IRODSParameters iRODSParams = new IRODSParameters(IRODS_PROPERTIES_FILE);
             
             irodsFileSystem = IRODSFileSystem.instance();
             System.out.println("IRODSFileSystem instantiated.");

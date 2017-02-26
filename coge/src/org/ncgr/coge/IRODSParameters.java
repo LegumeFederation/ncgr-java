@@ -1,5 +1,8 @@
 package org.ncgr.coge;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.Properties;
 
 /**
@@ -20,6 +23,22 @@ public class IRODSParameters {
      * Construct from a populated Properties object.
      */
     public IRODSParameters(Properties props) {
+        init(props);
+    }
+
+    /**
+     * Construct from a properties filename.
+     */
+    public IRODSParameters(String filename) throws IOException, FileNotFoundException {
+        Properties props = new Properties();
+        props.load(new FileInputStream(filename));
+        init(props);
+    }
+
+    /**
+     * Set fields from a properties object.
+     */
+    protected void init(Properties props) {
         host = props.getProperty("irods.host");
         port = Integer.parseInt(props.getProperty("irods.port"));
         user = props.getProperty("irods.user");
