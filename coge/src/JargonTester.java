@@ -1,4 +1,4 @@
-import org.ncgr.coge.IRODSParameters;
+import org.ncgr.irods.IRODSParameters;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -33,13 +33,13 @@ public class JargonTester {
 
         String directory = args[0];
 
-        IRODSFileSystem irodsFileSystem = null;
+        IRODSFileSystem iRODSFileSystem = null;
 
         try {
             
             IRODSParameters params = new IRODSParameters(PROPERTIES_FILE);
             
-            irodsFileSystem = IRODSFileSystem.instance();
+            iRODSFileSystem = IRODSFileSystem.instance();
             System.out.println("IRODSFileSystem instantiated.");
 
             IRODSAccount irodsAccount = new IRODSAccount(params.getHost(), params.getPort(), params.getUser(), params.getPassword(),
@@ -48,9 +48,9 @@ public class JargonTester {
             System.out.println("\tisAnonymousAccount\t"+irodsAccount.isAnonymousAccount());
             System.out.println("\tisDefaultObfuscate\t"+irodsAccount.isDefaultObfuscate());
 
-            DataTransferOperations dataTransferOperations = irodsFileSystem.getIRODSAccessObjectFactory().getDataTransferOperations(irodsAccount);
+            DataTransferOperations dataTransferOperations = iRODSFileSystem.getIRODSAccessObjectFactory().getDataTransferOperations(irodsAccount);
 
-            IRODSFileFactory irodsFileFactory = irodsFileSystem.getIRODSFileFactory(irodsAccount);
+            IRODSFileFactory irodsFileFactory = iRODSFileSystem.getIRODSFileFactory(irodsAccount);
 
             System.out.println(directory);
             IRODSFile irodsFile = irodsFileFactory.instanceIRODSFile(directory);
@@ -143,9 +143,9 @@ public class JargonTester {
             System.err.println(e);
         }
 
-        if (irodsFileSystem!=null) {
+        if (iRODSFileSystem!=null) {
             try {
-                irodsFileSystem.close();
+                iRODSFileSystem.close();
                 System.out.println("IRODSFileSystem closed.");
             } catch (JargonException e) {
                 System.err.println(e);

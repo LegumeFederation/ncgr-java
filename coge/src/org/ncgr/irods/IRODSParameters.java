@@ -1,4 +1,4 @@
-package org.ncgr.coge;
+package org.ncgr.irods;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
