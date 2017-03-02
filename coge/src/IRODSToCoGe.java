@@ -1,9 +1,12 @@
 import org.ncgr.irods.IRODSParameters;
 import org.ncgr.irods.Readme;
+import org.ncgr.irods.LISFile;
 
 import org.coge.api.CoGe;
+import org.coge.api.CoGeObject;
 import org.coge.api.CoGeParameters;
 import org.coge.api.CoGeResponse;
+import org.coge.api.Genome;
 import org.coge.api.Organism;
 
 import java.io.File;
@@ -44,18 +47,18 @@ public class IRODSToCoGe {
         
         IRODSFileSystem iRODSFileSystem = null;
 
-        // data we want to extract from iRODS
-        // README data
-        String identifier = null;
-        String genotype = null;
-        String source = null;
-        String provenance = null;
-        // FASTA files
-        File unmaskedFasta = null;
-        File softMaskedFasta = null;
-        File hardMaskedFasta = null;
-
         try {
+
+            // iRODS genome README data
+            String identifier = null;
+            String genotype = null;
+            String source = null;
+            String provenance = null;
+
+            // iRODS FASTA files
+            LISFile unmaskedFasta = null;
+            LISFile softmaskedFasta = null;
+            LISFile hardmaskedFasta = null;
 
             // get the CoGe auth params and initialize token
             CoGeParameters cogeParams = new CoGeParameters(COGE_PROPERTIES_FILE);
@@ -105,20 +108,21 @@ public class IRODSToCoGe {
             File[] files = irodsFile.listFiles();
             for (int i=0; i<files.length; i++) {
                 if (files[i].isDirectory()) {
-                    // discern directory purpose from LIS standard directory names
-                    // we only want genomes and annotation
-                    if (isGenomeDir(files[i])) {
-                        // drill deeper
+                    printLine(files[i]);
+                    LISFile g = new LISFile(files[i]);
+                    // we only want genomes here
+                    if (g.isGenomeDir()) {
                         IRODSFile subFile = irodsFileFactory.instanceIRODSFile(iRODSDirectory+"/"+files[i].getName());
                         File[] subFiles = subFile.listFiles();
                         for (int j=0; j<subFiles.length; j++) {
+                            printLine(subFiles[j]);
+                            LISFile f = new LISFile(subFiles[j]);
                             // gather the FASTA files
-                            if (isGenomeDir(files[i]) && isUnmaskedFasta(subFiles[j])) unmaskedFasta = subFiles[j];
-                            if (isGenomeDir(files[i]) && isSoftMaskedFasta(subFiles[j])) softMaskedFasta = subFiles[j];
-                            if (isGenomeDir(files[i]) && isHardMaskedFasta(subFiles[j])) hardMaskedFasta = subFiles[j];
-                            // discern file purpose from suffix
+                            if (f.isUnmaskedFasta()) unmaskedFasta = f;
+                            if (f.isSoftMaskedFasta()) softmaskedFasta = f;
+                            if (f.isHardMaskedFasta()) hardmaskedFasta = f;
                             // download the README.md
-                            if (isReadme(subFiles[j])) {
+                            if (f.isReadme()) {
                                 IRODSFile sourceFile = irodsFileFactory.instanceIRODSFile(iRODSDirectory+"/"+files[i].getName()+"/"+subFiles[j].getName());
                                 File localFile = new File(subFiles[j].getName());
                                 try {
@@ -127,10 +131,10 @@ public class IRODSToCoGe {
                                     localFile = new File(localFile.getName());
                                 }
                                 Readme readme = new Readme(localFile);
-                                identifier = readme.getIdentifier();
-                                genotype = readme.getGenotype();
-                                source = readme.getSource();
-                                provenance = readme.getProvenance();
+                                identifier = readme.getContent("Identifier");
+                                genotype = readme.getContent("Genotype");
+                                source = readme.getContent("Source");
+                                provenance = readme.getContent("Provenance");
                             }
                         }
                     }
@@ -138,47 +142,119 @@ public class IRODSToCoGe {
             }
 
             // Hopefully we found everything
-            if (identifier!=null && genotype!=null && source!=null && provenance!=null && unmaskedFasta!=null && softMaskedFasta!=null && hardMaskedFasta!=null) {
-                System.out.println("");
-                System.out.println("This is what we'll send to CoGe:");
-                System.out.println("Identifier:\t"+identifier);
-                System.out.println("Genotype:\t"+genotype);
-                System.out.println("Source:\t\t"+source);
-                System.out.println("Provenance:\t"+provenance);
-                System.out.println("");
-                System.out.println("unmasked FASTA:\t\t"+unmaskedFasta.getAbsolutePath());
-                System.out.println("soft-masked FASTA:\t"+softMaskedFasta.getAbsolutePath());
-                System.out.println("hard-masked FASTA:\t"+hardMaskedFasta.getAbsolutePath());
-                System.out.println("");
-            }
+            if (identifier!=null && genotype!=null && source!=null && provenance!=null && unmaskedFasta!=null && softmaskedFasta!=null && hardmaskedFasta!=null) {
 
-            // now for the CoGe stuff
-            List<Organism> organisms = coge.searchOrganism(cogeOrganismName);
-            if (organisms.size()==0) {
-                System.out.println("CoGe organism NOT FOUND.");
-            } else if (organisms.size()>1) {
-                System.out.println("Multiple CoGe organisms found. Refine your CoGe organism string.");
-            } else {
-                Organism organism = organisms.get(0);
-                System.out.println("Single CoGe organism FOUND.");
-                System.out.println("Organism Name:\t"+organism.getName());
-                System.out.println("Organism ID:\t"+organism.getId());
-                System.out.println("Organism Description:\t"+organism.getDescription());
+                // CoGe Genome Add terms
+                String name = genotype;
+                String description = provenance;
+                // form the version from the unmasked FASTA filename
+                // e.g. phavu.G19833.gnm1.zBnF.fa.gz
+                String[] parts = unmaskedFasta.getName().split("."+identifier+".");
+                String version = parts[0];
+                String sourceName = source;
+                boolean restricted = false;
                 System.out.println("");
-                System.out.println("Adding unmasked genome to CoGe...");
-                CoGeResponse response1 = coge.addGenome(organism, genotype, provenance, identifier, source, "unmasked", false, unmaskedFasta.getAbsolutePath());
-                System.out.println(response1.toString());
+                System.out.println("CoGe Genome Add data:");
                 System.out.println("");
-                System.out.println("Adding soft-masked genome to CoGe...");
-                CoGeResponse response2 = coge.addGenome(organism, genotype, provenance, identifier, source, "soft-masked", false, softMaskedFasta.getAbsolutePath());
-                System.out.println(response2.toString());
+                System.out.println("name:\t"+name);
+                System.out.println("description:\t"+description);
+                System.out.println("version:\t"+version);
+                System.out.println("source_name:\t"+sourceName);
+                System.out.println("restricted:\t"+restricted);
                 System.out.println("");
-                System.out.println("Adding hard-masked genome to CoGe...");
-                CoGeResponse response3 = coge.addGenome(organism, genotype, provenance, identifier, source, "hard-masked", false, hardMaskedFasta.getAbsolutePath());
-                System.out.println(response3.toString());
-            }                
+                if (unmaskedFasta!=null) System.out.println("type=unmasked:\t\t"+unmaskedFasta.getAbsolutePath());
+                if (softmaskedFasta!=null) System.out.println("type=soft-masked:\t"+softmaskedFasta.getAbsolutePath());
+                if (hardmaskedFasta!=null) System.out.println("type=hard-masked:\t"+hardmaskedFasta.getAbsolutePath());
+
+                // flags to NOT add a genome becaus it's already in CoGe
+                boolean skipUnmaskedFasta = false;
+                boolean skipHardmaskedFasta = false;
+                boolean skipSoftmaskedFasta = false;
                 
+                // now for the CoGe Genome Add
+                List<Organism> organisms = coge.searchOrganism(cogeOrganismName);
+                if (organisms.size()==0) {
+                    System.out.println("");
+                    System.out.println("CoGe organism NOT FOUND.");
+                } else if (organisms.size()>1) {
+                    System.out.println("");
+                    System.out.println("Multiple CoGe organisms found. Refine your CoGe organism string.");
+                } else {
+                    
+                    // let's first see if we've already got genomes with this name and version; don't include deleted genomes
+                    List<Genome> genomes = coge.searchGenome(name, false);
+                    if (genomes.size()>0) {
+                        for (Genome g : genomes) {
+                            if (g.getName().equals(name) && g.getVersion().equals(version)) {
+                                if (g.getSequenceType().getName().equals("unmasked")) skipUnmaskedFasta = true;
+                                if (g.getSequenceType().getName().equals("soft-masked")) skipSoftmaskedFasta = true;
+                                if (g.getSequenceType().getName().equals("hard-masked")) skipHardmaskedFasta = true;
+                            }
+                        }
+                    }
+                        
+                    Organism organism = organisms.get(0);
+                    System.out.println("");
+                    System.out.println("Single CoGe organism FOUND.");
+                    System.out.println("Organism Name:\t"+organism.getName());
+                    System.out.println("Organism ID:\t"+organism.getId());
+                    System.out.println("Organism Description:\t"+organism.getDescription());
 
+                    // unmasked CoGe Genome
+                    if (skipUnmaskedFasta) {
+                        System.out.println("");
+                        System.out.println("Skipping unmasked FASTA: unmasked genome already in CoGe.");
+                    } else if (unmaskedFasta!=null) {
+                        Genome unmaskedGenome = new Genome(name, description);
+                        unmaskedGenome.setOrganism(organism);
+                        unmaskedGenome.setVersion(version);
+                        unmaskedGenome.setSourceName(sourceName);
+                        unmaskedGenome.setRestricted(restricted);
+                        unmaskedGenome.setSequenceType(new CoGeObject(0,"unmasked"));
+                        System.out.println("");
+                        System.out.println("Adding unmasked genome to CoGe...");
+                        CoGeResponse response1 = coge.addGenome(unmaskedGenome, unmaskedFasta.getAbsolutePath());
+                        System.out.println(response1.toString());
+                    }
+
+                    // soft-masked CoGe genome
+                    if (skipSoftmaskedFasta) {
+                        System.out.println("");
+                        System.out.println("Skipping soft-masked FASTA: soft-masked genome already in CoGe.");
+                    } else if (softmaskedFasta!=null) {
+                        Genome softmaskedGenome = new Genome(name, description);
+                        softmaskedGenome.setOrganism(organism);
+                        softmaskedGenome.setVersion(version);
+                        softmaskedGenome.setSourceName(sourceName);
+                        softmaskedGenome.setRestricted(restricted);
+                        softmaskedGenome.setSequenceType(new CoGeObject(0,"soft-masked"));
+                        System.out.println("");
+                        System.out.println("Adding soft-masked genome to CoGe...");
+                        CoGeResponse response2 = coge.addGenome(softmaskedGenome, softmaskedFasta.getAbsolutePath());
+                        System.out.println(response2.toString());
+                    }
+                        
+                    // hard-masked CoGe genome
+                    if (skipHardmaskedFasta) {
+                        System.out.println("");
+                        System.out.println("Skipping hard-masked FASTA: hard-masked genome already in CoGe.");
+                    } else if (hardmaskedFasta!=null) {
+                        Genome hardmaskedGenome = new Genome(name, description);
+                        hardmaskedGenome.setOrganism(organism);
+                        hardmaskedGenome.setVersion(version);
+                        hardmaskedGenome.setSourceName(sourceName);
+                        hardmaskedGenome.setRestricted(restricted);
+                        hardmaskedGenome.setSequenceType(new CoGeObject(0,"hard-masked"));
+                        System.out.println("");
+                        System.out.println("Adding hard-masked genome to CoGe...");
+                        CoGeResponse response3 = coge.addGenome(hardmaskedGenome, hardmaskedFasta.getAbsolutePath());
+                        System.out.println(response3.toString());
+                    }
+
+                }
+                
+            }
+                
         } catch (AuthenticationException e) {
             System.out.println("Your username/password combination is invalid.");
         } catch (Exception e) {
@@ -204,8 +280,10 @@ public class IRODSToCoGe {
         if (file.isDirectory()) {
             System.out.println("");
             System.out.println("Dir:\t"+file.getAbsolutePath());
-        } else  if (file.isFile()) {
+        } else if (file.isFile()) {
             System.out.println("File:\t\t"+file.getAbsolutePath());
+        } else {
+            System.out.println("???:\t\t"+file.getAbsolutePath());
         }
     }
 
@@ -216,81 +294,9 @@ public class IRODSToCoGe {
         if (file.isDirectory()) {
             System.out.println("");
             System.out.println("Dir:\t"+file.getAbsolutePath());
-        } else  if (file.isFile()) {
+        } else if (file.isFile()) {
             System.out.println("File:\t\t"+file.getAbsolutePath());
         }
-    }
-
-    static boolean isFasta(File file) {
-        return file.getName().endsWith("fa.gz");
-    }
-
-    static boolean isHardMaskedFasta(File file) {
-        return file.getName().endsWith("hardmasked.fa.gz");
-    }
-
-    static boolean isSoftMaskedFasta(File file) {
-        return file.getName().endsWith("softmasked.fa.gz");
-    }
-
-    static boolean isUnmaskedFasta(File file) {
-        return isFasta(file) && !isHardMaskedFasta(file) && !isSoftMaskedFasta(file);
-    }
-    
-    static boolean isCDSFasta(File file) {
-        return file.getName().endsWith("cds.fa.gz");
-    }
-
-    static boolean isCDSPrimaryTranscriptOnlyFasta(File file) {
-        return file.getName().endsWith("cds_primaryTranscriptOnly.fa.gz");
-    }
-
-    static boolean isProteinFasta(File file) {
-        return file.getName().endsWith("protein.fa.gz");
-    }
-
-    static boolean isProteinPrimaryTranscriptOnlyFasta(File file) {
-        return file.getName().endsWith("protein_primaryTranscriptOnly.fa.gz");
-    }
-    
-    static boolean isTranscriptFasta(File file) {
-        return file.getName().endsWith("transcript.fa.gz");
-    }
-    
-    static boolean isTranscriptPrimaryTranscriptOnlyFasta(File file) {
-        return file.getName().endsWith("transcript_primaryTranscriptOnly.fa.gz");
-    }
-
-    static boolean isGFF(File file) {
-        return file.getName().endsWith("gff3.gz");
-    }
-    
-    static boolean isGeneGFF(File file) {
-        return file.getName().endsWith("gene.gff3.gz");
-    }
-
-    static boolean isGeneExonsGFF(File file) {
-        return file.getName().endsWith("gene_exons.gff3.gz");
-    }
-
-    static boolean isReadme(File file) {
-        return file.getName().startsWith("README");
-    }
-
-    static boolean isGenomeDir(File dir) {
-        return dir.getName().endsWith("gnm1");
-    }
-
-    static boolean isAnnotationDir(File dir) {
-        return dir.getName().endsWith("ann1");
-    }
-
-    static boolean isDiversityDir(File dir) {
-        return dir.getName().endsWith("div1");
-    }
-    
-    static boolean isSyntenyDir(File dir) {
-        return dir.getName().endsWith("synt1");
     }
 
 }
