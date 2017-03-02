@@ -44,10 +44,10 @@ public class CoGeTester {
 
             // THIS PARTICULAR TEST FOLLOWS
 
-            String name = "Taxidea taxus";
+            String name = "Vigna radiata (mung bean)";
             
-            String description = "cellular organisms; Eukaryota; Opisthokonta; Metazoa; Eumetazoa; Bilateria; Deuterostomia; Chordata; Craniata; Vertebrata; Gnathostomata; Teleostomi; Euteleostomi; Sarcopterygii; Dipnotetrapodomorpha; Tetrapoda; Amniota; Mammalia; Theria; Eutheria; Boreoeutheria; Laurasiatheria; Carnivora; Caniformia; Mustelidae; Taxidiinae; Taxidea";
-            
+            String description = "cellular organisms; Eukaryota; Viridiplantae; Streptophyta; Streptophytina; Embryophyta; Tracheophyta; Euphyllophyta; Spermatophyta; Magnoliophyta; Mesangiospermae; eudicotyledons; Gunneridae; Pentapetalae; rosids; fabids; Fabales; Fabaceae; Papilionoideae; Phaseoleae; Vigna";
+
             System.out.println("Attempting to add organism:\t"+name);
             System.out.println("\t\tDescription:\t"+description);
             System.out.println("");

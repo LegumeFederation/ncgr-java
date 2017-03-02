@@ -27,9 +27,9 @@ import org.irods.jargon.core.exception.JargonException;
 import org.irods.jargon.core.exception.OverwriteException;
 
 /**
- * Copy data from iRODS to CoGe.
+ * Copy genome data from iRODS to CoGe.
  */
-public class IRODSToCoGe {
+public class IRODSCoGeGenomes {
 
     static String IRODS_PROPERTIES_FILE = "irods.properties";
     static String COGE_PROPERTIES_FILE = "coge.properties";
@@ -135,6 +135,7 @@ public class IRODSToCoGe {
                                 genotype = readme.getContent("Genotype");
                                 source = readme.getContent("Source");
                                 provenance = readme.getContent("Provenance");
+                                System.out.println("Identifier:"+identifier+"\tGenotype:"+genotype+"\tSource:"+source+"\tProvenance:"+provenance);
                             }
                         }
                     }
