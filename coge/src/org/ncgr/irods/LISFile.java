@@ -53,7 +53,7 @@ public class LISFile extends File {
     }
 
     public boolean isProteinFasta() {
-        return getName().endsWith("protein.fa.gz");
+        return getName().endsWith("protein.fa.gz") || getName().endsWith("pep.fa.gz");
     }
 
     public boolean isProteinPrimaryTranscriptOnlyFasta() {
@@ -69,15 +69,19 @@ public class LISFile extends File {
     }
 
     public boolean isGFF() {
-        return getName().endsWith("gff3.gz");
+        return getName().endsWith("gff3.gz") || getName().endsWith("gff.gz");
     }
     
     public boolean isGeneGFF() {
-        return getName().endsWith("gene.gff3.gz");
+        return getName().endsWith("gene.gff3.gz") || getName().endsWith("gene.gff.gz");
     }
 
     public boolean isGeneExonsGFF() {
-        return getName().endsWith("gene_exons.gff3.gz");
+        return getName().endsWith("gene_exons.gff3.gz") || getName().endsWith("gene_exons.gff.gz");
+    }
+
+    public boolean isGeneModelsGFF() {
+        return getName().endsWith("gene_models.gff3.gz") || getName().endsWith("gene_models.gff.gz");
     }
 
     public boolean isReadme() {
@@ -116,19 +120,53 @@ public class LISFile extends File {
             return false;
         }
     }
-    
-    public boolean isSyntenyDir() {
+
+    public boolean isVariantDir() {
         String suffix = getSuffix(getName());
         if (suffix==null) {
             return false;
-        } else if (suffix.startsWith("synt")) {
+        } else if (suffix.startsWith("var")) {
             return true;
         } else {
             return false;
         }
     }
 
-    public boolean isTranscriptomeAssemblyDir() {
+    public boolean isBACDir() {
+        String suffix = getSuffix(getName());
+        if (suffix==null) {
+            return false;
+        } else if (suffix.startsWith("bac")) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public boolean isMarkerDir() {
+        String suffix = getSuffix(getName());
+        if (suffix==null) {
+            return false;
+        } else if (suffix.startsWith("mrk")) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+
+    public boolean isSyntenyDir() {
+        String suffix = getSuffix(getName());
+        if (suffix==null) {
+            return false;
+        } else if (suffix.startsWith("syn")) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public boolean isTranscriptomeDir() {
         String suffix = getSuffix(getName());
         if (suffix==null) {
             return false;
@@ -150,6 +188,5 @@ public class LISFile extends File {
             return null;
         }
     }
-        
 
 }

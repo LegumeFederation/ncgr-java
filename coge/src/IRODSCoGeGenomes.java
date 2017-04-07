@@ -7,11 +7,14 @@ import org.coge.api.CoGeObject;
 import org.coge.api.CoGeParameters;
 import org.coge.api.CoGeResponse;
 import org.coge.api.Genome;
+import org.coge.api.Notebook;
 import org.coge.api.Organism;
 
 import java.io.File;
 
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 import java.util.Properties;
 
 import org.irods.jargon.core.connection.IRODSAccount;
@@ -36,14 +39,16 @@ public class IRODSCoGeGenomes {
 
     public static void main(String[] args) {
 
-        if (args.length!=2) {
-            System.out.println("Usage: IRODSToCoGe <iplant directory> <CoGe organism name>");
+        if (args.length<2) {
+            System.out.println("Usage: IRODSToCoGe <iplant directory> <CoGe organism name> [CoGe notebook name]");
             System.out.println("Example: IRODSToCoGe /iplant/home/shared/Legume_Federation/Cajanus_cajan \"Cajanus cajan\"");
             System.exit(1);
         }
 
         String iRODSDirectory = args[0];
         String cogeOrganismName = args[1];
+        String notebookName = null;
+        if (args.length==3) notebookName = args[2];
         
         IRODSFileSystem iRODSFileSystem = null;
 
@@ -83,6 +88,22 @@ public class IRODSCoGeGenomes {
             
             // instantiate our CoGe workhorse
             CoGe coge = new CoGe(cogeParams.getBaseURL(), cogeParams.getUser(), cogeParams.getToken());
+
+
+            // find our CoGe notebook, if desired; if more than one, show error
+            Notebook notebook = null;
+            if (notebookName!=null) {
+                List<Notebook> list = coge.searchNotebook(notebookName);
+                System.out.println("");
+                if (list.size()>1) {
+                    System.out.println("More than one CoGe notebook found matching the term: "+notebookName+". Genomes will not be added to a notebook.");
+                } else if (list.size()==0) {
+                    System.out.println("No CoGe notebook found matching the term: "+notebookName+". Genomes will not be added to a notebook.");
+                } else {
+                    notebook = list.get(0);
+                    System.out.println("CoGe notebook "+notebook.getName()+" found. Genomes will be added to this notebook.");
+                }
+            }
 
             // get the iRODS parameters
             IRODSParameters iRODSParams = new IRODSParameters(IRODS_PROPERTIES_FILE);
@@ -143,7 +164,7 @@ public class IRODSCoGeGenomes {
             }
 
             // Hopefully we found everything
-            if (identifier!=null && genotype!=null && source!=null && provenance!=null && unmaskedFasta!=null && softmaskedFasta!=null && hardmaskedFasta!=null) {
+            if (identifier!=null && genotype!=null && source!=null && provenance!=null && unmaskedFasta!=null) {
 
                 // CoGe Genome Add terms
                 String name = genotype;
@@ -216,6 +237,17 @@ public class IRODSCoGeGenomes {
                         System.out.println("Adding unmasked genome to CoGe...");
                         CoGeResponse response1 = coge.addGenome(unmaskedGenome, unmaskedFasta.getAbsolutePath());
                         System.out.println(response1.toString());
+                        // add this genome to the desired notebook
+                        if (notebook!=null && response1.getSuccess()) {
+                            Map<Integer,String> items = new HashMap<Integer,String>();
+                            items.put(response1.getId(), "genome");
+                            boolean success = coge.addItemsToNotebook(notebook, items);
+                            if (success) {
+                                System.out.println("Success adding unmasked genome to notebook: "+notebook.getName());
+                            } else {
+                                System.out.println("Failure adding unmasked genome to notebook: "+notebook.getName());
+                            }
+                        }                            
                     }
 
                     // soft-masked CoGe genome
@@ -233,6 +265,17 @@ public class IRODSCoGeGenomes {
                         System.out.println("Adding soft-masked genome to CoGe...");
                         CoGeResponse response2 = coge.addGenome(softmaskedGenome, softmaskedFasta.getAbsolutePath());
                         System.out.println(response2.toString());
+                        // add this genome to the desired notebook
+                        if (notebook!=null && response2.getSuccess()) {
+                            Map<Integer,String> items = new HashMap<Integer,String>();
+                            items.put(response2.getId(), "genome");
+                            boolean success = coge.addItemsToNotebook(notebook, items);
+                            if (success) {
+                                System.out.println("Success adding soft-masked genome to notebook: "+notebook.getName());
+                            } else {
+                                System.out.println("Failure adding soft-masked genome to notebook: "+notebook.getName());
+                            }
+                        }
                     }
                         
                     // hard-masked CoGe genome
@@ -250,6 +293,17 @@ public class IRODSCoGeGenomes {
                         System.out.println("Adding hard-masked genome to CoGe...");
                         CoGeResponse response3 = coge.addGenome(hardmaskedGenome, hardmaskedFasta.getAbsolutePath());
                         System.out.println(response3.toString());
+                        // add this genome to the desired notebook
+                        if (notebook!=null && response3.getSuccess()) {
+                            Map<Integer,String> items = new HashMap<Integer,String>();
+                            items.put(response3.getId(), "genome");
+                            boolean success = coge.addItemsToNotebook(notebook, items);
+                            if (success) {
+                                System.out.println("Success adding hard-masked genome to notebook: "+notebook.getName());
+                            } else {
+                                System.out.println("Failure adding hard-masked genome to notebook: "+notebook.getName());
+                            }
+                        }
                     }
 
                 }

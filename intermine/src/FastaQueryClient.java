@@ -11,15 +11,12 @@ import org.intermine.webservice.client.core.ServiceFactory;
 import org.intermine.webservice.client.services.QueryService;
 
 /**
- * This is a Java program to run a query from BeanMine.
- * It was automatically generated at Wed Sep 28 17:18:26 MDT 2016
+ * Print out a multi-FASTA corresponding to all genes.
+ * Enter the Intermine service URL as a parameter.
  *
- * @author shokin@ncgr.org
- *
+ * @author Sam Hokin
  */
 public class FastaQueryClient {
-    
-    private static final String ROOT = "http://datil:8081/beanmine/service";
 
     /**
      * Perform the query and print the rows of results.
@@ -27,18 +24,26 @@ public class FastaQueryClient {
      * @throws IOException
      */
     public static void main(String[] args) throws IOException {
-        ServiceFactory factory = new ServiceFactory(ROOT);
+
+        if (args.length!=1) {
+            System.out.println("Usage: FastaQueryClient <intermine service URL>");
+            System.exit(0);
+        }
+        
+        String intermineServiceUrl = args[0];
+    
+        ServiceFactory factory = new ServiceFactory(intermineServiceUrl);
         Model model = factory.getModel();
         PathQuery query = new PathQuery(model);
 
         // Select the output columns:
-        query.addViews("GeneFlankingRegion.primaryIdentifier", "GeneFlankingRegion.sequence.residues");
+        query.addViews("Gene.primaryIdentifier", "Gene.secondaryIdentifier");
 
         // Add orderby
-        query.addOrderBy("GeneFlankingRegion.primaryIdentifier", OrderDirection.ASC);
+        query.addOrderBy("Gene.primaryIdentifier", OrderDirection.ASC);
 
         // Filter the results with the following constraints:
-        query.addConstraint(Constraints.eq("GeneFlankingRegion.direction", "upstream"));
+        query.addConstraint(Constraints.eq("Gene.symbol", args[0]));
 
         QueryService service = factory.getQueryService();
         Iterator<List<Object>> rows = service.getRowListIterator(query);

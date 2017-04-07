@@ -1,1 +1,1 @@
-java -cp classes:lib/slf4j-api.jar:lib/slf4j-nop.jar:lib/jargon-core.jar JargonTester /iplant/home/shared/Legume_Federation/Phaseolus_vulgaris
+java -cp classes:lib/slf4j-api.jar:lib/slf4j-nop.jar:lib/jargon-core.jar JargonTester $1 $2

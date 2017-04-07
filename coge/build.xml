@@ -3,7 +3,6 @@
 
   <target name="init">
     <tstamp/>
-    <property name="jar"                 value="coge-api.jar"/>
     <property name="coge-api"            value="../../coge/classes"/>
     <property name="resty"               value="lib/resty.jar"/>
     <property name="jargon-user-tagging" value="lib/jargon-user-tagging.jar"/>
@@ -34,10 +33,6 @@
     </javac>
   </target>
 
-  <target name="jar" depends="classes">
-    <jar destfile="${jar}" basedir="classes"/>
-  </target>
-
   <target name="javadoc" depends="classes">
     <javadoc destdir="javadoc"
 	     classpath="classes:${coge-api}:${resty}:${jargon-core}">
@@ -52,7 +47,7 @@
     <mkdir dir="javadoc"/>
   </target>
 
-  <target name="commit" depends="jar,javadoc">
+  <target name="commit" depends="classes,javadoc">
   </target>
   
 </project>

@@ -17,6 +17,8 @@
     <property name="intermine-model" value="lib/intermine-model.jar"/>
     <property name="intermine-client" value="lib/intermine-client.jar"/>
     <property name="intermine-pathquery" value="lib/intermine-pathquery.jar"/>
+
+    <property name="neo4j-java-driver" value="lib/neo4j-java-driver-1.2.0.jar"/>
   </target>
 
   <target name="about">
@@ -29,6 +31,7 @@
     <javac srcdir="src"
 	   classpath="classes
                       :${intermine-model}:${intermine-client}:${intermine-pathquery}
+                      :${neo4j-java-driver}
                       :${commons-codec}:${commons-lang}:${commons-httpclient}:${commons-io}:${commons-logging}:${json}:${stax-api}:${stax-ri}:${log4j}"
            deprecation="true"
            includeantruntime="false"

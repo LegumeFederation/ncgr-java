@@ -57,7 +57,7 @@ public class IRODSCoGeAnnotation {
             String subject = null;
 
             // iRODS annotation files
-            LISFile geneExonsGFF = null;
+            LISFile geneGFF = null;
 
             // get the CoGe auth params and initialize token
             CoGeParameters cogeParams = new CoGeParameters(COGE_PROPERTIES_FILE);
@@ -116,7 +116,7 @@ public class IRODSCoGeAnnotation {
                         for (int j=0; j<subFiles.length; j++) {
                             LISFile f = new LISFile(subFiles[j]);
                             // gather the GFF files
-                            if (f.isGeneExonsGFF()) geneExonsGFF = f;
+                            if (f.isGeneGFF()) geneGFF = f;
                             // download the README.md
                             if (f.isReadme()) {
                                 IRODSFile sourceFile = irodsFileFactory.instanceIRODSFile(iRODSDirectory+"/"+files[i].getName()+"/"+subFiles[j].getName());
@@ -147,7 +147,7 @@ public class IRODSCoGeAnnotation {
                 String name = genotype;
                 String description = provenance;
                 String sourceName = source;
-                String[] parts = geneExonsGFF.getName().split("."+identifier+".");
+                String[] parts = geneGFF.getName().split("."+identifier+".");
                 String version = parts[0];
                 System.out.println("");
                 System.out.println("CoGe Feature Add (annotation) data:");
@@ -156,7 +156,7 @@ public class IRODSCoGeAnnotation {
                 System.out.println("description:\t"+description);
                 System.out.println("version:\t"+version);
                 System.out.println("source_name:\t"+sourceName);
-                System.out.println("gene_exons:\t"+geneExonsGFF.getAbsolutePath());
+                System.out.println("gene_exons:\t"+geneGFF.getAbsolutePath());
 
                 // now for the CoGe Genome Add
                 List<Organism> organisms = coge.searchOrganism(cogeOrganismName);
@@ -181,8 +181,8 @@ public class IRODSCoGeAnnotation {
                         for (Genome g : genomes) {
                             if (g.getName().equals(name) && g.getVersion().equals(version)) {
                                 System.out.println("");
-                                System.out.println("Adding features to genome name:"+name+"\tversion:"+version);
-                                CoGeResponse response = coge.addFeatures(g, name, description, version, sourceName, geneExonsGFF.getAbsolutePath());
+                                System.out.println("Adding gene features to genome name:"+name+"\tversion:"+version);
+                                CoGeResponse response = coge.addFeatures(g, name, description, version, sourceName, geneGFF.getAbsolutePath());
                                 System.out.println(response.toString());
                             }
                         }

@@ -1,4 +1,5 @@
 import org.ncgr.irods.IRODSParameters;
+import org.ncgr.irods.LISFile;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -25,13 +26,15 @@ public class JargonTester {
 
     public static void main(String[] args) {
 
-        if (args.length!=1) {
-            System.out.println("Usage: JargonTester <iplant directory>");
-            System.out.println("Example: JargonTester /iplant/home/shared/Legume_Federation/Cajanus_cajan");
+        if (args.length!=2) {
+            System.out.println("Usage: JargonTester Genus species");
+            System.out.println("Example: JargonTester Cajanus cajan");
             System.exit(1);
         }
 
-        String directory = args[0];
+        String genus = args[0];
+	String species = args[1];
+	String directory = "/iplant/home/shared/Legume_Federation/"+genus+"_"+species;
 
         IRODSFileSystem iRODSFileSystem = null;
 
@@ -59,71 +62,51 @@ public class JargonTester {
                 String fileType = null;
                 if (files[i].isFile()) fileType = "file";
                 if (files[i].isDirectory()) fileType = "directory";
-                // discern directory purpose from LIS standard directory names
-                boolean isGenomeDir = files[i].isDirectory() && files[i].getName().endsWith("gnm1");
-                boolean isAnnotationDir = files[i].isDirectory() && files[i].getName().endsWith("ann1");
-                boolean isDiversityDir = files[i].isDirectory() && files[i].getName().endsWith("div1");
-                boolean isSyntenyDir = files[i].isDirectory() && files[i].getName().endsWith("synt1");
-                System.out.print("\t"+fileType+"\t"+files[i].getName()); 
-                if (isGenomeDir) System.out.print("\tGENOME DIRECTORY");
-                if (isAnnotationDir) System.out.print("\tANNOTATION DIRECTORY");
-                if (isDiversityDir) System.out.print("\tDIVERSITY DIRECTORY");
-                if (isSyntenyDir) System.out.print("\tSYNTENY DIRECTORY");
+                LISFile lisFile = new LISFile(files[i]);
+                // output
+                System.out.print("\t"+fileType+"\t"+lisFile.getName()); 
+                if (lisFile.isGenomeDir()) System.out.print("\tGENOME DIRECTORY");
+                if (lisFile.isAnnotationDir()) System.out.print("\tANNOTATION DIRECTORY");
+                if (lisFile.isDiversityDir()) System.out.print("\tDIVERSITY DIRECTORY");
+                if (lisFile.isSyntenyDir()) System.out.print("\tSYNTENY DIRECTORY");
+                if (lisFile.isTranscriptomeDir()) System.out.print("\tTRANSCRIPTOME DIRECTORY");
+                if (lisFile.isBACDir()) System.out.print("\tBAC DIRECTORY");
+                if (lisFile.isMarkerDir()) System.out.print("\tMARKER DIRECTORY");
+                if (lisFile.isVariantDir()) System.out.print("\tVARIANT DIRECTORY");
                 System.out.println("");
                 // drill deeper
                 if (files[i].isDirectory()) {
-                    IRODSFile subFile = irodsFileFactory.instanceIRODSFile(directory+"/"+files[i].getName());
+                    IRODSFile subFile = irodsFileFactory.instanceIRODSFile(directory+"/"+lisFile.getName());
                     File[] subFiles = subFile.listFiles();
                     for (int j=0; j<subFiles.length; j++) {
                         String subFileType = null;
                         if (subFiles[j].isFile()) subFileType = "file";
                         if (subFiles[j].isDirectory()) subFileType = "directory";
-
-                        // discern file purpose from suffix
-                        boolean isFasta = subFiles[j].isFile() && subFiles[j].getName().endsWith("fa.gz");
-                        boolean isHardMaskedFasta = subFiles[j].isFile() && subFiles[j].getName().endsWith("hardmasked.fa.gz");
-                        boolean isSoftMaskedFasta = subFiles[j].isFile() && subFiles[j].getName().endsWith("softmasked.fa.gz");
-                        boolean isPlainFasta = isFasta && !isHardMaskedFasta && !isSoftMaskedFasta;
-                        
-                        boolean isCDSFasta = isFasta && subFiles[j].getName().endsWith("cds.fa.gz");
-                        boolean isCDSPrimaryTranscriptOnlyFasta = isFasta && subFiles[j].getName().endsWith("cds_primaryTranscriptOnly.fa.gz");
-                        
-                        boolean isProteinFasta = isFasta && subFiles[j].getName().endsWith("protein.fa.gz");
-                        boolean isProteinPrimaryTranscriptOnlyFasta = isFasta && subFiles[j].getName().endsWith("protein_primaryTranscriptOnly.fa.gz");
-
-                        boolean isTranscriptFasta = isFasta && subFiles[j].getName().endsWith("transcript.fa.gz");
-                        boolean isTranscriptPrimaryTranscriptOnlyFasta = isFasta && subFiles[j].getName().endsWith("transcript_primaryTranscriptOnly.fa.gz");
-
-                        boolean isGFF = subFiles[j].isFile() && subFiles[j].getName().endsWith("gff3.gz");
-                        boolean isGeneGFF = subFiles[j].isFile() && subFiles[j].getName().endsWith("gene.gff3.gz");
-                        boolean isGeneExonsGFF = isGFF && subFiles[j].getName().endsWith("gene_exons.gff3.gz");
-                        
-                        boolean isReadme = subFiles[j].isFile() && subFiles[j].getName().startsWith("README");
-
+                        LISFile subLISFile = new LISFile(subFiles[j]);
                         // output
-                        System.out.print("\t\t"+subFileType+"\t\t"+subFiles[j].getName());
+                        System.out.print("\t\t"+subFileType+"\t\t"+subLISFile.getName());
                         
-                        if (isFasta) System.out.print("\tFASTA");
-                        if (isHardMaskedFasta) System.out.print("\tHARDMASKED");
-                        if (isSoftMaskedFasta) System.out.print("\tSOFTMASKED");
+                        if (subLISFile.isFasta()) System.out.print("\tFASTA");
+                        if (subLISFile.isHardMaskedFasta()) System.out.print("\tHARDMASKED");
+                        if (subLISFile.isSoftMaskedFasta()) System.out.print("\tSOFTMASKED");
                         
-                        if (isCDSFasta) System.out.print("\tCDS");
-                        if (isCDSPrimaryTranscriptOnlyFasta) System.out.print("\tCDS Primary Transcripts Only");
+                        if (subLISFile.isCDSFasta()) System.out.print("\tCDS");
+                        if (subLISFile.isCDSPrimaryTranscriptOnlyFasta()) System.out.print("\tCDS Primary Transcripts Only");
                         
-                        if (isProteinFasta) System.out.print("\tPROTEIN");
-                        if (isProteinPrimaryTranscriptOnlyFasta) System.out.print("\tPROTEIN Primary Transcripts Only");
+                        if (subLISFile.isProteinFasta()) System.out.print("\tPROTEIN");
+                        if (subLISFile.isProteinPrimaryTranscriptOnlyFasta()) System.out.print("\tPROTEIN Primary Transcripts Only");
 
-                        if (isTranscriptFasta) System.out.print("\tTRANSCRIPTS");
-                        if (isTranscriptPrimaryTranscriptOnlyFasta) System.out.print("\tTRANSCRIPTS Primary Transcripts Only");
+                        if (subLISFile.isTranscriptFasta()) System.out.print("\tTRANSCRIPTS");
+                        if (subLISFile.isTranscriptPrimaryTranscriptOnlyFasta()) System.out.print("\tTRANSCRIPTS Primary Transcripts Only");
 
-                        if (isGFF) System.out.print("\tGFF");
-                        if (isGeneGFF) System.out.print("\tGENES");
-                        if (isGeneExonsGFF) System.out.print("\tGENES+EXONS");
+                        if (subLISFile.isGFF()) System.out.print("\tGFF");
+                        if (subLISFile.isGeneGFF()) System.out.print("\tGENES");
+                        if (subLISFile.isGeneExonsGFF()) System.out.print("\tGENES+EXONS");
 
-                        if (isReadme) {
+                        if (subLISFile.isReadme()) {
                             System.out.print("\tREADME");
-                            IRODSFile sourceFile = irodsFileFactory.instanceIRODSFile(directory+"/"+files[i].getName()+"/"+subFiles[j].getName());
-                            File localFile = new File(subFiles[j].getName());
+                            IRODSFile sourceFile = irodsFileFactory.instanceIRODSFile(directory+"/"+files[i].getName()+"/"+subLISFile.getName());
+                            File localFile = new File(subLISFile.getName());
                             try {
                                 dataTransferOperations.getOperation(sourceFile, localFile, null, null);
                                 System.out.print("\tCOPIED TO LOCAL DIRECTORY.");
